@@ -1,0 +1,45 @@
+---
+abstract: 'Extension of Canvas widget to create a graph like GDGraph.'
+author:
+  - 'Djibril Ousmanou <djibel@cpan.org>'
+build_requires:
+  POSIX: 0
+  Test::More: 0
+  Tk: 800
+  Tk::Canvas::GradientColor: 1.04
+configure_requires:
+  Module::Build: 0.36
+generated_by: 'Module::Build version 0.3601'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Tk-Chart
+provides:
+  Tk::Chart:
+    file: lib/Tk/Chart.pm
+    version: 1.00
+  Tk::Chart::Areas:
+    file: lib/Tk/Chart/Areas.pm
+    version: 1.00
+  Tk::Chart::Bars:
+    file: lib/Tk/Chart/Bars.pm
+    version: 1.00
+  Tk::Chart::Boxplots:
+    file: lib/Tk/Chart/Boxplots.pm
+    version: 1.00
+  Tk::Chart::Lines:
+    file: lib/Tk/Chart/Lines.pm
+    version: 1.00
+  Tk::Chart::Mixed:
+    file: lib/Tk/Chart/Mixed.pm
+    version: 1.00
+  Tk::Chart::Pie:
+    file: lib/Tk/Chart/Pie.pm
+    version: 1.00
+  Tk::Chart::Utils:
+    file: lib/Tk/Chart/Utils.pm
+    version: 1.00
+resources:
+  license: http://dev.perl.org/licenses/
+version: 1.00
