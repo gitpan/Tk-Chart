@@ -448,3 +448,36 @@ sub disabled_automatic_redraw {
 }
 
 1;
+
+__END__
+
+=head1 NAME
+
+Tk::Chart::Utils - Private Tk::Chart methods
+
+=head1 SYNOPSIS
+
+none
+
+=head1 DESCRIPTION
+
+none
+
+=head1 AUTHOR
+
+Djibril Ousmanou, C<< <djibel at cpan.org> >>
+
+
+=head1 COPYRIGHT & LICENSE
+
+Copyright 2010 Djibril Ousmanou, all rights reserved.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+
+=head1 SEE ALSO
+
+L<Tk::Chart>
+
+=cut

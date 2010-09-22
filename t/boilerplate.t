@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 3;
+use Test::More tests => 9;
 
 sub not_in_file_ok {
     my ($filename, %regex) = @_;
@@ -55,6 +55,5 @@ TODO: {
   module_boilerplate_ok('lib/Tk/Chart/Lines.pm');
   module_boilerplate_ok('lib/Tk/Chart/Mixed.pm');
   module_boilerplate_ok('lib/Tk/Chart/Pie.pm');
-  module_boilerplate_ok('lib/Tk/Chart/Utils.pm');
 
 }

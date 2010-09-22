@@ -1,4 +1,7 @@
 Revision history for Tk-Chart
 
+1.01    22/09/2010 07:57:44
+        Bug test installation boilerplate.t fixed
+
 1.00    21/09/2010 18:23:28
         First version

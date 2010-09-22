@@ -11,7 +11,7 @@ use warnings;
 use Carp;
 use Tk::Chart::Utils qw / :DUMMIES /;
 use vars qw($VERSION);
-$VERSION = '1.00';
+$VERSION = '1.01';
 
 use Exporter;
 
