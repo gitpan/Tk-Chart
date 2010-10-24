@@ -7,12 +7,12 @@ use Carp;
 #==================================================================
 # Author    : Djibril Ousmanou
 # Copyright : 2010
-# Update    : 23/10/2010 11:18:55
+# Update    : 24/10/2010 12:45:29
 # AIM       : Create line graph
 #==================================================================
 
 use vars qw($VERSION);
-$VERSION = '1.01';
+$VERSION = '1.02';
 
 use base qw/ Tk::Derived Tk::Canvas::GradientColor /;
 use Tk::Balloon;
@@ -324,6 +324,7 @@ sub _ViewLegend {
   my $legendfont         = $CompositeWidget->{RefChart}->{Legend}{legendfont};
   my $titlecolor         = $CompositeWidget->{RefChart}->{Legend}{titlecolors};
   my $titlefont          = $CompositeWidget->{RefChart}->{Legend}{titlefont};
+  my $axiscolor          = $CompositeWidget->cget( -axiscolor );
 
   if ( defined $LegendTitle ) {
     my $xLegendTitle
@@ -487,7 +488,8 @@ sub _ViewLegend {
     $x1Box, $y1Box, $x2Box, $y2Box,
     -tags => [
       $CompositeWidget->{RefChart}->{TAGS}{BoxLegend}, $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
-    ]
+    ],
+    -outline => $axiscolor,
   );
 
   return;
@@ -498,7 +500,7 @@ sub _axis {
 
   my $axiscolor = $CompositeWidget->cget( -axiscolor );
 
-  # x axis width
+  # x-axis width
   $CompositeWidget->{RefChart}->{Axis}{Xaxis}{Width}
     = $CompositeWidget->{RefChart}->{Canvas}{Width}
     - ( 2 * $CompositeWidget->{RefChart}->{Canvas}{WidthEmptySpace}
@@ -511,7 +513,7 @@ sub _axis {
     $CompositeWidget->_Legend( $CompositeWidget->{RefChart}->{Legend}{DataLegend} );
   }
 
-  # Height y axis
+  # Height y-axis
   $CompositeWidget->{RefChart}->{Axis}{Yaxis}{Height}
     = $CompositeWidget->{RefChart}->{Canvas}{Height}    # Largeur canvas
     - (
@@ -564,7 +566,7 @@ sub _axis {
     + $CompositeWidget->{RefChart}->{Axis}{Xaxis}{Width}    # Largeur axe x
     ;
 
-  # Bottom x axis
+  # Bottom x-axis
   $CompositeWidget->createLine(
     $CompositeWidget->{RefChart}->{Axis}{CxMin},
     $CompositeWidget->{RefChart}->{Axis}{CyMin},
@@ -620,11 +622,11 @@ sub _xtick {
   my $xvaluecolor = $CompositeWidget->cget( -xvaluecolor );
   my $longticks   = $CompositeWidget->cget( -longticks );
 
-  # x coordinates y ticks on bottom x axis
+  # x coordinates y ticks on bottom x-axis
   my $Xtickx1 = $CompositeWidget->{RefChart}->{Axis}{CxMin};
   my $Xticky1 = $CompositeWidget->{RefChart}->{Axis}{CyMin};
 
-  # x coordinates y ticks on 0,0 x axis if the graph have only y value < 0
+  # x coordinates y ticks on 0,0 x-axis if the graph have only y value < 0
   if (  $CompositeWidget->cget( -zeroaxisonly ) == 1
     and $CompositeWidget->{RefChart}->{Data}{MaxYValue} > 0 )
   {
@@ -692,7 +694,7 @@ sub _ViewDataLines {
   my $spline             = $CompositeWidget->cget( -spline );
   my $dash               = $CompositeWidget->cget( -dash );
 
-  # number of value for x axis
+  # number of value for x-axis
   $CompositeWidget->{RefChart}->{Data}{xtickNumber} = $CompositeWidget->{RefChart}->{Data}{NumberXValues};
 
   # Space between x ticks
@@ -790,7 +792,7 @@ sub _ViewDataPoints {
   my $markersize         = $CompositeWidget->cget( -markersize );
   my $markers            = $CompositeWidget->cget( -markers );
 
-  # number of value for x axis
+  # number of value for x-axis
   $CompositeWidget->{RefChart}->{Data}{xtickNumber} = $CompositeWidget->{RefChart}->{Data}{NumberXValues};
 
   # Space between x ticks
@@ -1469,9 +1471,9 @@ Default : B<#B3B3B3>
 
 Draw the axes as a box.
 
- -boxaxis => 0, #  0 or 1
+ -boxaxis => 1, #  0 or 1
 
-Default : B<1>
+Default : B<0>
 
 =item Name:	B<Noaxis>
 
@@ -2097,9 +2099,9 @@ Default : B<{Times} 8 {normal}>
 
 Set a box around all legend.
 
- -box => 0,
+ -box => 1, # or 0
 
-Default : B<1>
+Default : B<0>
 
 =item *
 
@@ -2135,7 +2137,7 @@ Default : B<30>
 
 =head2 zoom
 
-zoom the graph. The x axis and y axis will be zoomed. If your graph has a 300*300 
+Zoom the graph. The x-axis and y-axis will be zoomed. If your graph has a 300*300 
 size, after a zoom(200), the graph will have a 600*600 size.
 
 $Chart->zoom(I<$zoom>);
@@ -2153,7 +2155,7 @@ $zoom must be an integer great than 0.
 
 =head2 zoomx
 
-zoom the graph the x axis.
+Zoom the graph the x-axis.
 
  # original canvas size 300*300
  $Chart->zoomx(50); # new size : 150*300
@@ -2162,12 +2164,23 @@ zoom the graph the x axis.
 
 =head2 zoomy
 
-zoom the graph the y axis.
+Zoom the graph the y-axis.
 
  # original canvas size 300*300
  $Chart->zoomy(50); # new size : 300*150
  ...
  $Chart->zoom(100); # new size : 300*300
+
+=head1 EXAMPLES
+
+In the B<demo> directory, you have a lot of script examples with their screenshot. 
+See also the L<http://search.cpan.org/dist/Tk-Chart/MANIFEST> web page of L<Tk::Chart>.
+
+=head1 SEE ALSO
+
+See L<Tk::Canvas> for details of the standard options.
+
+See L<Tk::Chart>, L<Tk::Chart::FAQ>, L<GD::Graph>, L<Tk::Graph>, L<Tk::LineGraph>, L<Tk::PlotDataset>
 
 =head1 AUTHOR
 
@@ -2178,179 +2191,6 @@ Djibril Ousmanou, C<< <djibel at cpan.org> >>
 Please report any bugs or feature requests to C<bug-Tk-Chart at rt.cpan.org>, or through
 the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Tk-Chart>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
-
-=head1 EXAMPLES
-
-No legend
-
-  #!/usr/bin/perl
-  use strict;
-  use warnings;
-  use Tk;
-  use Tk::Chart::Bars;
-  
-  my $mw = new MainWindow(
-    -title      => 'Tk::Chart::Bars No legend',
-    -background => 'white',
-  );
-  
-  my $Chart = $mw->Bars(
-    -title  => 'My graph title - no legend',
-    -xlabel => 'X Label',
-    -ylabel => 'Y Label',
-  )->pack(qw / -fill both -expand 1 /);
-  
-  my @data = (
-    [ '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th' ],
-    [ 4,     0,     16,    2,     3,     5.5,   7,     5,     02 ],
-    [ 1,     2,     4,     6,     3,     17.5,  1,     20,    10 ]
-  );
-  
-  # Create the graph
-  $Chart->plot( \@data );
-  
-  MainLoop();
-
-
-Just negative values
-
-  #!/usr/bin/perl
-  use strict;
-  use warnings;
-  use Tk;
-  use Tk::Chart::Lines;
-
-  my $mw = new MainWindow(
-    -title      => 'Tk::Chart::Lines example - negative values',
-    -background => 'white',
-  );
-
-  my $Chart = $mw->Lines(
-    -title        => 'My graph title',
-    -xlabel       => 'X Label',
-    -ylabel       => 'Y Label',
-    -zeroaxisonly => 1,
-  )->pack(qw / -fill both -expand 1 /);
-
-  my @data = (
-    [ '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th' ],
-    [ 4,     -4,    -16,   -2,    -3,    -5.5,  -7,    -5,    -2 ],
-    [ -1,    -2,    -4,    -6,    -3,    -17.5, -1,    -20,   -10 ]
-  );
-
-  # Create the graph
-  $Chart->plot( \@data );
-  
-  MainLoop();
-
-Create a zoom Menu with the graph.
-
-  #!/usr/bin/perl
-  use strict;
-  use warnings;
-  use Tk;
-  use Tk::Chart::Lines;
-
-  my $mw = new MainWindow(
-    -title => 'Tk::Chart::Lines example with legend and zoom menu',
-    -background => 'white',
-  );
-
-  my $Chart = $mw->Lines(
-    -title      => 'My graph title',
-    -xlabel     => 'X Label',
-    -ylabel     => 'Y Label',
-    -linewidth  => 2,
-    -background => 'white',
-  )->pack(qw / -fill both -expand 1 /);
-
-  my @data = (
-    [ '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th' ],
-    [ 1,     2,     5,     -6,    3,     1.5,   1,     3,     4 ],
-    [ 4,     0,     16,    2,     3,     5.5,   7,     5,     02 ],
-    [ 1,     2,     4,     6,     3,     17.5,  1,     20,    10 ]
-  );
-
-  # Add a legend to our graph
-  my @Legends = ( 'legend 1', 'legend 2', 'legend 3' );
-  $Chart->set_legend(
-    -title       => 'Title legend',
-    -data        => \@Legends,
-    -titlecolors => 'blue',
-  );
-
-  # I can see the legend text when mouse pass on line and
-  # the line change color when mouse pass on legend text
-  $Chart->set_balloon();
-
-  # Create the graph
-  $Chart->plot( \@data );
-
-  $Chart->add_data( [ 1 .. 9 ], 'legend  4' );
-
-  my $menu = Menu( $Chart, [qw/30 50 80 100 150 200/] );
-
-  MainLoop();
-
-  sub CanvasMenu {
-    my ( $Canvas, $x, $y, $CanvasMenu ) = @_;
-    $CanvasMenu->post( $x, $y );
-
-    return;
-  }
-
-  sub Menu {
-    my ( $Chart, $RefData ) = @_;
-    my %MenuConfig = (
-      -tearoff    => 0,
-      -takefocus  => 1,
-      -background => 'white',
-      -menuitems  => [],
-    );
-    my $Menu = $Chart->Menu(%MenuConfig);
-    $Menu->add( 'cascade', -label => 'Zoom' );
-    $Menu->add( 'cascade', -label => 'Zoom X-axis' );
-    $Menu->add( 'cascade', -label => 'Zoom Y-axis' );
-
-    my $SsMenuZoomX = $Menu->Menu(%MenuConfig);
-    my $SsMenuZoomY = $Menu->Menu(%MenuConfig);
-    my $SsMenuZoom  = $Menu->Menu(%MenuConfig);
-
-    for my $Zoom ( @{$RefData} ) {
-      $SsMenuZoom->add(
-        'command',
-        -label   => '$Zoom %',
-        -command => sub { $Chart->zoom($Zoom); }
-      );
-      $SsMenuZoomX->add(
-        'command',
-        -label   => '$Zoom %',
-        -command => sub { $Chart->zoomx($Zoom); }
-      );
-      $SsMenuZoomY->add(
-        'command',
-        -label   => '$Zoom %',
-        -command => sub { $Chart->zoomy($Zoom); }
-      );
-
-    }
-
-    $Menu->entryconfigure( 'Zoom X-axis', -menu => $SsMenuZoomX );
-    $Menu->entryconfigure( 'Zoom Y-axis', -menu => $SsMenuZoomY );
-    $Menu->entryconfigure( 'Zoom',        -menu => $SsMenuZoom );
-
-    $Chart->Tk::bind( '<ButtonPress-3>',
-      [ \&CanvasMenu, Ev('X'), Ev('Y'), $Menu, $Chart ] );
-
-    return $Menu;
-  }
-
-
-=head1 SEE ALSO
-
-See L<Tk::Canvas> for details of the standard options.
-
-See L<Tk::Chart>, L<Tk::Chart::FAQ>, L<GD::Graph>, L<Tk::Graph>, L<Tk::LineGraph>, L<Tk::PlotDataset>
 
 =head1 SUPPORT
 

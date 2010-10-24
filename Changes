@@ -1,5 +1,10 @@
 Revision history for Tk-Chart
 
+1.15  24/10/2010 14:21:11
+      POD documentation updated.
+      Tk::Chart::FAQ updated.
+      
+
 1.14  24/10/2010 01:59:15
       Many options added :
         PIE

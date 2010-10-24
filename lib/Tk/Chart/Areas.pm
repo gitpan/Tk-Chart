@@ -7,12 +7,12 @@ use Carp;
 #==================================================================
 # Author    : Djibril Ousmanou
 # Copyright : 2010
-# Update    : 23/10/2010 11:18:46
+# Update    : 24/10/2010 12:44:46
 # AIM       : Create area graph
 #==================================================================
 
 use vars qw($VERSION);
-$VERSION = '1.01';
+$VERSION = '1.02';
 
 use base qw/ Tk::Derived Tk::Canvas::GradientColor /;
 use Tk::Balloon;
@@ -300,6 +300,7 @@ sub _ViewLegend {
   my $legendfont         = $CompositeWidget->{RefChart}->{Legend}{legendfont};
   my $titlecolor         = $CompositeWidget->{RefChart}->{Legend}{titlecolors};
   my $titlefont          = $CompositeWidget->{RefChart}->{Legend}{titlefont};
+  my $axiscolor          = $CompositeWidget->cget( -axiscolor );
 
   if ( defined $LegendTitle ) {
     my $xLegendTitle
@@ -433,6 +434,7 @@ sub _ViewLegend {
     -tags => [
       $CompositeWidget->{RefChart}->{TAGS}{BoxLegend}, $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
     ],
+    -outline => $axiscolor,
   );
 
   return;
@@ -443,7 +445,7 @@ sub _axis {
 
   my $axiscolor = $CompositeWidget->cget( -axiscolor );
 
-  # x axis width
+  # x-axis width
   $CompositeWidget->{RefChart}->{Axis}{Xaxis}{Width}
     = $CompositeWidget->{RefChart}->{Canvas}{Width}
     - ( 2 * $CompositeWidget->{RefChart}->{Canvas}{WidthEmptySpace}
@@ -456,7 +458,7 @@ sub _axis {
     $CompositeWidget->_Legend( $CompositeWidget->{RefChart}->{Legend}{DataLegend} );
   }
 
-  # Height y axis
+  # Height y-axis
   $CompositeWidget->{RefChart}->{Axis}{Yaxis}{Height}
     = $CompositeWidget->{RefChart}->{Canvas}{Height}    # Largeur canvas
     - (
@@ -509,7 +511,7 @@ sub _axis {
     + $CompositeWidget->{RefChart}->{Axis}{Xaxis}{Width}    # Largeur axe x
     ;
 
-  # Bottom x axis
+  # Bottom x-axis
   $CompositeWidget->createLine(
     $CompositeWidget->{RefChart}->{Axis}{CxMin},
     $CompositeWidget->{RefChart}->{Axis}{CyMin},
@@ -564,11 +566,11 @@ sub _xtick {
   my $xvaluecolor = $CompositeWidget->cget( -xvaluecolor );
   my $longticks   = $CompositeWidget->cget( -longticks );
 
-  # x coordinates y ticks on bottom x axis
+  # x coordinates y ticks on bottom x-axis
   my $Xtickx1 = $CompositeWidget->{RefChart}->{Axis}{CxMin};
   my $Xticky1 = $CompositeWidget->{RefChart}->{Axis}{CyMin};
 
-  # x coordinates y ticks on 0,0 x axis if the graph have only y value < 0
+  # x coordinates y ticks on 0,0 x-axis if the graph have only y value < 0
   if (  $CompositeWidget->cget( -zeroaxisonly ) == 1
     and $CompositeWidget->{RefChart}->{Data}{MaxYValue} > 0 )
   {
@@ -637,7 +639,7 @@ sub _ViewData {
 
   my $tag_area = $CompositeWidget->{RefChart}->{TAGS}{Area};
 
-  # number of value for x axis
+  # number of value for x-axis
   $CompositeWidget->{RefChart}->{Data}{xtickNumber} = $CompositeWidget->{RefChart}->{Data}{NumberXValues};
 
   # Space between x ticks
@@ -656,7 +658,7 @@ sub _ViewData {
     my @PointsData;        # coordinate x and y
     my @DashPointsxLines;
 
-    # First point, in x axis
+    # First point, in x-axis
     my $Fisrtx = $CompositeWidget->{RefChart}->{Axis}{Cx0}
       + $CompositeWidget->{RefChart}->{Axis}{Xaxis}{SpaceBetweenTick};
     my $Fisrty = $CompositeWidget->{RefChart}->{Axis}{Cy0};
@@ -694,7 +696,7 @@ sub _ViewData {
 
     }
 
-    # Last point, in x axis
+    # Last point, in x-axis
     my $Lastx = $CompositeWidget->{RefChart}->{Axis}{Cx0}
       + ( $NumberData - 1 ) * $CompositeWidget->{RefChart}->{Axis}{Xaxis}{SpaceBetweenTick};
 
@@ -1387,9 +1389,9 @@ Default : B<#B3B3B3>
 
 Draw the axes as a box.
 
- -boxaxis => 0, #  0 or 1
+ -boxaxis => 1, #  0 or 1
 
-Default : B<1>
+Default : B<0>
 
 =item Name:	B<Noaxis>
 
@@ -1921,9 +1923,9 @@ Default : B<{Times} 8 {normal}>
 
 Set a box around all legend.
 
- -box => 0,
+ -box => 1, # or 0
 
-Default : B<1>
+Default : B<0>
 
 =item *
 
@@ -1959,7 +1961,7 @@ Default : B<30>
 
 =head2 zoom
 
-zoom the graph. The x axis and y axis will be zoomed. If your graph has a 300*300 
+Zoom the graph. The x-axis and y-axis will be zoomed. If your graph has a 300*300 
 size, after a zoom(200), the graph will have a 600*600 size.
 
 $Chart->zoom(I<$zoom>);
@@ -1977,7 +1979,7 @@ $zoom must be an integer great than 0.
 
 =head2 zoomx
 
-zoom the graph the x axis.
+Zoom the graph the x-axis.
 
  # original canvas size 300*300
  $Chart->zoomx(50); # new size : 150*300
@@ -1986,12 +1988,23 @@ zoom the graph the x axis.
 
 =head2 zoomy
 
-zoom the graph the y axis.
+Zoom the graph the y-axis.
 
  # original canvas size 300*300
  $Chart->zoomy(50); # new size : 300*150
  ...
  $Chart->zoom(100); # new size : 300*300
+
+=head1 EXAMPLES
+
+In the B<demo> directory, you have a lot of script examples with their screenshot. 
+See also the L<http://search.cpan.org/dist/Tk-Chart/MANIFEST> web page of L<Tk::Chart>.
+
+=head1 SEE ALSO
+
+See L<Tk::Canvas> for details of the standard options.
+
+See L<Tk::Chart>, L<Tk::Chart::FAQ>, L<GD::Graph>.
 
 =head1 AUTHOR
 
@@ -2002,12 +2015,6 @@ Djibril Ousmanou, C<< <djibel at cpan.org> >>
 Please report any bugs or feature requests to C<bug-Tk-Chart at rt.cpan.org>, or through
 the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Tk-Chart>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
-
-=head1 SEE ALSO
-
-See L<Tk::Canvas> for details of the standard options.
-
-See L<Tk::Chart>, L<Tk::Chart::FAQ>, L<GD::Graph>.
 
 =head1 SUPPORT
 

@@ -43,6 +43,7 @@ $Chart->set_legend(
   -data        => \@Legends,
   -titlecolors => 'white',
   -legendcolor => 'white',
+  -box         => 1,
 );
 
 # Add help identification

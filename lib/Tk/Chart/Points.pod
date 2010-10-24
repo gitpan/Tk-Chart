@@ -26,9 +26,9 @@ L<Tk::Chart::Lines/"Options for point lines graph">
     -background => 'white',
   );
   my $Chart = $mw->Lines(
-    -title  => 'My graph title',
-    -xlabel => 'X Label',
-    -ylabel => 'Y Label',
+    -title     => 'My graph title',
+    -xlabel    => 'X Label',
+    -ylabel    => 'Y Label',
     -pointline => 1,
   )->pack(qw / -fill both -expand 1 /);
 

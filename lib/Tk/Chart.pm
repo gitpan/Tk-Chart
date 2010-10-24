@@ -3,7 +3,7 @@ package Tk::Chart;
 #==================================================================
 # Author    : Djibril Ousmanou
 # Copyright : 2010
-# Update    : 24/10/2010 01:29:33
+# Update    : 24/10/2010 12:55:59
 # AIM       : Private functions for Tk::Chart modules
 #==================================================================
 use strict;
@@ -11,7 +11,7 @@ use warnings;
 use Carp;
 use Tk::Chart::Utils qw / :DUMMIES /;
 use vars qw($VERSION);
-$VERSION = '1.14';
+$VERSION = '1.15';
 
 use Exporter;
 
@@ -67,6 +67,7 @@ sub _get_ConfigSpecs {
     -textcolor   => [ 'PASSIVE', 'Textcolor',   'TextColor',   undef ],
     -textfont    => [ 'PASSIVE', 'Textfont',    'TextFont',    undef ],
 
+    -axiscolor    => [ 'PASSIVE', 'Axiscolor',    'AxisColor',    'black' ],
     -boxaxis      => [ 'PASSIVE', 'Boxaxis',      'BoxAxis',      0 ],
     -noaxis       => [ 'PASSIVE', 'Noaxis',       'NoAxis',       0 ],
     -zeroaxisonly => [ 'PASSIVE', 'Zeroaxisonly', 'ZeroAxisOnly', 0 ],
@@ -78,7 +79,6 @@ sub _get_ConfigSpecs {
     -xlongtickscolor => [ 'PASSIVE', 'XLongtickscolor', 'XLongTicksColor', '#B3B3B3' ],
     -ylongtickscolor => [ 'PASSIVE', 'YLongtickscolor', 'YLongTicksColor', '#B3B3B3' ],
     -longtickscolor  => [ 'PASSIVE', 'Longtickscolor',  'LongTicksColor',  undef ],
-    -axiscolor       => [ 'PASSIVE', 'Axiscolor',       'AxisColor',       'black' ],
 
     -xtickheight => [ 'PASSIVE', 'Xtickheight', 'XTickHeight', $RefConfig->{Axis}{Xaxis}{TickHeight} ],
     -xtickview   => [ 'PASSIVE', 'Xtickview',   'XTickView',   1 ],
@@ -1199,7 +1199,7 @@ sub _ChartConstruction {
     $CompositeWidget->_Balloon();
   }
 
-  # If Y value < 0, don't display O x axis
+  # If Y value < 0, don't display O x-axis
   if ( $CompositeWidget->{RefChart}->{Data}{MaxYValue} < 0 ) {
     $CompositeWidget->delete( $CompositeWidget->{RefChart}->{TAGS}{xAxis0} );
     $CompositeWidget->delete( $CompositeWidget->{RefChart}->{TAGS}{xValue0} );
@@ -1295,20 +1295,10 @@ You can set a background gradient color by using L<Tk::Canvas::GradientColor> me
 You can change the color, font of title, labels (x and y) of graphs.
 You can set an interactive legend. The axes can be automatically scaled or set by the code.
 
-When the mouse cursor passes over a plotted line, bars, pie or its entry in the legend, 
-its entry will be turned to a color to help identify it. 
+When the mouse cursor passes over a plotted lines, bars, pies or its entry in the legend, 
+they will be turned to a color to help identify it. 
 
 You can use 3 methods to zoom (vertically, horizontally or both).
-
-L<Tk::Chart::Lines>, 
-Extension of Canvas widget to create lines graph. 
-With this module it is possible to plot quantitative variables according to qualitative variables.
-
-L<Tk::Chart::Splines>, 
-To create lines graph as B<B>E<eacute>B<zier curve>. 
-
-L<Tk::Chart::Points>, 
-Extension of Canvas widget to create point lines graph. 
 
 L<Tk::Chart::Areas>, 
 Extension of Canvas widget to create an area lines graph. 
@@ -1316,18 +1306,32 @@ Extension of Canvas widget to create an area lines graph.
 L<Tk::Chart::Bars>,  
 Extension of Canvas widget to create bars graph with vertical bars.
 
-L<Tk::Chart::Pie>,  
-Extension of Canvas widget to create a pie graph. 
+L<Tk::Chart::Boxplots>,  
+Extension of Canvas widget to create boxplots graph. 
+
+L<Tk::Chart::FAQ>,  
+Frequently Asked Questions about L<Tk::Chart>.
+
+L<Tk::Chart::Lines>, 
+Extension of Canvas widget to create lines graph. 
+With this module it is possible to plot quantitative variables according to qualitative variables.
 
 L<Tk::Chart::Mixed>,  
 Extension of Canvas widget to create a graph mixed with lines, lines points, splines, bars, points and areas. 
 
-L<Tk::Chart::Boxplots>,  
-Extension of Canvas widget to create boxplots graph. 
+L<Tk::Chart::Pie>,  
+Extension of Canvas widget to create a pie graph. 
+
+L<Tk::Chart::Points>, 
+Extension of Canvas widget to create point lines graph. 
+
+L<Tk::Chart::Splines>, 
+To create lines graph as B<B>E<eacute>B<zier curve>. 
 
 =head1 EXAMPLES
 
-See the samples directory in the distribution, and read documentations for each modules Tk::Chart::B<ModuleName>.
+In the B<demo> directory, you have a lot of script examples with their screenshot. 
+See also the L<http://search.cpan.org/dist/Tk-Chart/MANIFEST> web page of L<Tk::Chart>.
 
 =head1 SEE ALSO
 
@@ -1349,15 +1353,15 @@ automatically be notified of progress on your bug as I make changes.
 You can find documentation for this module with the perldoc command.
 
     perldoc Tk::Chart
-    perldoc Tk::Chart::Lines
-    perldoc Tk::Chart::Splines
-    perldoc Tk::Chart::Points
-    perldoc Tk::Chart::Bars
     perldoc Tk::Chart::Areas
+    perldoc Tk::Chart::Bars
+    perldoc Tk::Chart::Boxplots
+    perldoc Tk::Chart::FAQ
+    perldoc Tk::Chart::Lines
     perldoc Tk::Chart::Mixed
     perldoc Tk::Chart::Pie
-    perldoc Tk::Chart::FAQ
-    perldoc Tk::Chart::Boxplots
+    perldoc Tk::Chart::Points
+    perldoc Tk::Chart::Splines
 
 You can also look for information at:
 

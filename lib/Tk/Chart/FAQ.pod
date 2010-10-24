@@ -188,6 +188,11 @@ B<-yminvalue> and B<-ymaxvalue> options.
 
 You can see examples in demo directory.
 
+=head2 Where can I find some examples ?
+
+In the B<demo> directory, you have a lot of script examples with their screenshot. 
+You can see theses files on L<http://search.cpan.org/dist/Tk-Chart/MANIFEST> page of Tk::Chart.
+
 =head1 SEE ALSO
 
 L<Tk::Chart>

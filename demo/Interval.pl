@@ -40,6 +40,7 @@ foreach my $Chart ( $Chart, $Chart2, $Chart3 ) {
     -linewidth   => 2,
     -yticknumber => 10,
     -ylongticks  => 1,
+    -yvaluecolor => '#700000',
   );
 
   # Add a legend to the graph

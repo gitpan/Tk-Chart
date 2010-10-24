@@ -7,12 +7,12 @@ use Carp;
 #==================================================================
 # Author    : Djibril Ousmanou
 # Copyright : 2010
-# Update    : 23/10/2010 10:30:53
+# Update    : 24/10/2010 12:46:03
 # AIM       : Create pie graph
 #==================================================================
 
 use vars qw($VERSION);
-$VERSION = '1.01';
+$VERSION = '1.02';
 
 use base qw/ Tk::Derived Tk::Canvas::GradientColor /;
 use Tk::Balloon;
@@ -866,7 +866,7 @@ resolv the bug.
 
 =head2 zoom
 
-zoom the graph (vertical and horizontal zoom).
+Zoom the graph (vertical and horizontal zoom).
 
 $PieChart->zoom(I<$zoom>);
 
@@ -899,6 +899,11 @@ Vertical zoom.
  $PieChart->zoomy(50); # new size : 300*150
  ...
  $PieChart->zoom(100); # new size : 300*300
+
+=head1 EXAMPLES
+
+In the B<demo> directory, you have a lot of script examples with their screenshot. 
+See also the L<http://search.cpan.org/dist/Tk-Chart/MANIFEST> web page of L<Tk::Chart>.
 
 =head1 SEE ALSO
 
