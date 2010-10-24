@@ -7,12 +7,12 @@ use Carp;
 #==================================================================
 # Author    : Djibril Ousmanou
 # Copyright : 2010
-# Update    : 21/09/2010 16:12:28
+# Update    : 23/10/2010 10:38:22
 # AIM       : Create bars graph
 #==================================================================
 
 use vars qw($VERSION);
-$VERSION = '1.00';
+$VERSION = '1.01';
 
 use base qw/ Tk::Derived Tk::Canvas::GradientColor /;
 use Tk::Balloon;
@@ -40,73 +40,16 @@ sub Populate {
     $CompositeWidget->configure( -highlightthickness => 0 );
   }
 
+  my $RefConfigCommon = _get_ConfigSpecs();
+
+  # ConfigSpecs
   $CompositeWidget->ConfigSpecs(
-    -title      => [ 'PASSIVE', 'Title',      'Title',      undef ],
-    -titlecolor => [ 'PASSIVE', 'Titlecolor', 'TitleColor', 'black' ],
-    -titlefont => [ 'PASSIVE', 'Titlefont', 'TitleFont', $CompositeWidget->{RefChart}->{Font}{DefaultTitle} ],
-    -titleposition => [ 'PASSIVE', 'Titleposition', 'TitlePosition', 'center' ],
-    -titleheight =>
-      [ 'PASSIVE', 'Titleheight', 'TitleHeight', $CompositeWidget->{RefChart}->{Title}{Height} ],
 
-    -xlabel      => [ 'PASSIVE', 'Xlabel',      'XLabel',      undef ],
-    -xlabelcolor => [ 'PASSIVE', 'Xlabelcolor', 'XLabelColor', 'black' ],
-    -xlabelfont =>
-      [ 'PASSIVE', 'Xlabelfont', 'XLabelFont', $CompositeWidget->{RefChart}->{Font}{DefaultLabel} ],
-    -xlabelposition => [ 'PASSIVE', 'Xlabelposition', 'XLabelPosition', 'center' ],
-    -xlabelheight   => [
-      'PASSIVE', 'Xlabelheight', 'XLabelHeight', $CompositeWidget->{RefChart}->{Axis}{Xaxis}{xlabelHeight}
-    ],
-    -xlabelskip => [ 'PASSIVE', 'Xlabelskip', 'XLabelSkip', 0 ],
+    # Common options
+    %{$RefConfigCommon},
 
-    -xvaluecolor    => [ 'PASSIVE', 'Xvaluecolor',    'XValueColor',    'black' ],
-    -xvaluevertical => [ 'PASSIVE', 'Xvaluevertical', 'XValueVertical', 0 ],
-    -xvaluespace    => [
-      'PASSIVE',     'Xvaluespace',
-      'XValueSpace', $CompositeWidget->{RefChart}->{Axis}{Xaxis}{ScaleValuesHeight}
-    ],
-    -xvalueview   => [ 'PASSIVE', 'Xvalueview',   'XValueView',   1 ],
-    -yvalueview   => [ 'PASSIVE', 'Yvalueview',   'YValueView',   1 ],
-    -xvaluesregex => [ 'PASSIVE', 'Xvaluesregex', 'XValuesRegex', qr/.+/ ],
-
-    -ylabel      => [ 'PASSIVE', 'Ylabel',      'YLabel',      undef ],
-    -ylabelcolor => [ 'PASSIVE', 'Ylabelcolor', 'YLabelColor', 'black' ],
-    -ylabelfont =>
-      [ 'PASSIVE', 'Ylabelfont', 'YLabelFont', $CompositeWidget->{RefChart}->{Font}{DefaultLabel} ],
-    -ylabelposition => [ 'PASSIVE', 'Ylabelposition', 'YLabelPosition', 'center' ],
-    -ylabelwidth =>
-      [ 'PASSIVE', 'Ylabelwidth', 'YLabelWidth', $CompositeWidget->{RefChart}->{Axis}{Yaxis}{ylabelWidth} ],
-
-    -yvaluecolor => [ 'PASSIVE', 'Yvaluecolor', 'YValueColor', 'black' ],
-
-    -labelscolor => [ 'PASSIVE', 'Labelscolor', 'LabelsColor', undef ],
-    -valuescolor => [ 'PASSIVE', 'Valuescolor', 'ValuesColor', undef ],
-    -textcolor   => [ 'PASSIVE', 'Textcolor',   'TextColor',   undef ],
-    -textfont    => [ 'PASSIVE', 'Textfont',    'TextFont',    undef ],
-
-    -boxaxis      => [ 'PASSIVE', 'Boxaxis',      'BoxAxis',      0 ],
-    -noaxis       => [ 'PASSIVE', 'Noaxis',       'NoAxis',       0 ],
-    -zeroaxisonly => [ 'PASSIVE', 'Zeroaxisonly', 'ZeroAxisOnly', 0 ],
-    -zeroaxis     => [ 'PASSIVE', 'Zeroaxis',     'ZeroAxis',     0 ],
-    -longticks    => [ 'PASSIVE', 'Longticks',    'LongTicks',    0 ],
-
-    -xtickheight =>
-      [ 'PASSIVE', 'Xtickheight', 'XTickHeight', $CompositeWidget->{RefChart}->{Axis}{Xaxis}{TickHeight} ],
-    -xtickview => [ 'PASSIVE', 'Xtickview', 'XTickView', 1 ],
-
-    -yticknumber =>
-      [ 'PASSIVE', 'Yticknumber', 'YTickNumber', $CompositeWidget->{RefChart}->{Axis}{Yaxis}{TickNumber} ],
-    -ytickwidth =>
-      [ 'PASSIVE', 'Ytickwidth', 'YtickWidth', $CompositeWidget->{RefChart}->{Axis}{Yaxis}{TickWidth} ],
-    -ytickview => [ 'PASSIVE', 'Ytickview', 'YTickView', 1 ],
-
-    -alltickview => [ 'PASSIVE', 'Alltickview', 'AllTickView', 1 ],
-
-    -width  => [ 'SELF', 'width',  'Width',  $CompositeWidget->{RefChart}->{Canvas}{Width} ],
-    -height => [ 'SELF', 'height', 'Height', $CompositeWidget->{RefChart}->{Canvas}{Height} ],
-
-    -linewidth  => [ 'PASSIVE', 'Linewidth',  'LineWidth',  1 ],
-    -colordata  => [ 'PASSIVE', 'Colordata',  'ColorData',  $CompositeWidget->{RefChart}->{Legend}{Colors} ],
-    -spacingbar => [ 'PASSIVE', 'Spacingbar', 'SpacingBar', 1 ],
+    -spacingbar        => [ 'PASSIVE', 'Spacingbar',        'SpacingBar',        1 ],
+    -boxplotlinescolor => [ 'PASSIVE', 'BoxplotLinescolor', 'BoxplotLinesColor', 'black' ],
   );
 
   $CompositeWidget->Delegates( DEFAULT => $CompositeWidget, );
@@ -249,6 +192,7 @@ sub boxplot_information {
 
 sub set_legend {
   my ( $CompositeWidget, %InfoLegend ) = @_;
+
   my $RefLegend = $InfoLegend{-data};
   unless ( defined $RefLegend ) {
     $CompositeWidget->_error(
@@ -314,6 +258,11 @@ sub set_legend {
   # title color
   if ( defined $InfoLegend{-titlecolors} ) {
     $CompositeWidget->{RefChart}->{Legend}{titlecolors} = $InfoLegend{-titlecolors};
+  }
+
+  # text color
+  if ( defined $InfoLegend{-legendcolor} ) {
+    $CompositeWidget->{RefChart}->{Legend}{legendcolor} = $InfoLegend{-legendcolor};
   }
 
   # legendmarkerheight
@@ -503,6 +452,7 @@ sub _ViewLegend {
         -text   => $NewLegend,
         -anchor => 'nw',
         -tags   => [ $Tag, $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart}, ],
+        -fill   => $CompositeWidget->{RefChart}->{Legend}{legendcolor},
       );
       if ($legendfont) {
         $CompositeWidget->itemconfigure( $Id, -font => $legendfont, );
@@ -558,6 +508,8 @@ sub _ViewLegend {
 sub _axis {
   my ($CompositeWidget) = @_;
 
+  my $axiscolor = $CompositeWidget->cget( -axiscolor );
+
   # x axis width
   $CompositeWidget->{RefChart}->{Axis}{Xaxis}{Width}
     = $CompositeWidget->{RefChart}->{Canvas}{Width}
@@ -612,6 +564,7 @@ sub _axis {
       $CompositeWidget->{RefChart}->{TAGS}{yAxis}, $CompositeWidget->{RefChart}->{TAGS}{AllAXIS},
       $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
     ],
+    -fill => $axiscolor,
   );
 
   #===========================
@@ -631,25 +584,22 @@ sub _axis {
       $CompositeWidget->{RefChart}->{TAGS}{xAxis}, $CompositeWidget->{RefChart}->{TAGS}{AllAXIS},
       $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
     ],
+    -fill => $axiscolor,
   );
 
   # POINT (0,0)
+  $CompositeWidget->{RefChart}->{Axis}{Yaxis}{HeightUnit}    # Height unit for value = 1
+    = $CompositeWidget->{RefChart}->{Axis}{Yaxis}{Height}
+    / ( $CompositeWidget->{RefChart}->{Data}{MaxYValue} - $CompositeWidget->{RefChart}->{Data}{MinYValue} );
+
   # min positive value >= 0
   if ( $CompositeWidget->{RefChart}->{Data}{MinYValue} >= 0 ) {
     $CompositeWidget->{RefChart}->{Axis}{Cx0} = $CompositeWidget->{RefChart}->{Axis}{CxMin};
     $CompositeWidget->{RefChart}->{Axis}{Cy0} = $CompositeWidget->{RefChart}->{Axis}{CyMin};
-
-    $CompositeWidget->{RefChart}->{Axis}{Yaxis}{HeightUnit}    # Height unit for value = 1
-      = $CompositeWidget->{RefChart}->{Axis}{Yaxis}{Height}
-      / ( $CompositeWidget->{RefChart}->{Data}{MaxYValue} - 0 );
   }
 
   # min positive value < 0
   else {
-
-    $CompositeWidget->{RefChart}->{Axis}{Yaxis}{HeightUnit}    # Height unit for value = 1
-      = $CompositeWidget->{RefChart}->{Axis}{Yaxis}{Height}
-      / ( $CompositeWidget->{RefChart}->{Data}{MaxYValue} - $CompositeWidget->{RefChart}->{Data}{MinYValue} );
     $CompositeWidget->{RefChart}->{Axis}{Cx0} = $CompositeWidget->{RefChart}->{Axis}{CxMin};
     $CompositeWidget->{RefChart}->{Axis}{Cy0}
       = $CompositeWidget->{RefChart}->{Axis}{CyMin}
@@ -666,6 +616,7 @@ sub _axis {
         $CompositeWidget->{RefChart}->{TAGS}{xAxis0}, $CompositeWidget->{RefChart}->{TAGS}{AllAXIS},
         $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
       ],
+      -fill => $axiscolor,
     );
   }
 
@@ -722,19 +673,9 @@ sub _xtick {
     if ( $data =~ m{$RegexXtickselect} ) {
       next unless ( defined $IndiceToSkip{$Indice} );
 
-      # Long tick
-      if ( defined $longticks and $longticks == 1 ) {
-        $Xticky1 = $CompositeWidget->{RefChart}->{Axis}{CyMax};
-        $Xticky2 = $CompositeWidget->{RefChart}->{Axis}{CyMin};
-      }
+      # Display xticks short or long
+      $CompositeWidget->_DisplayxTicks( $Xtickx1, $Xticky1, $Xtickx2, $Xticky2 );
 
-      $CompositeWidget->createLine(
-        $Xtickx1, $Xticky1, $Xtickx2, $Xticky2,
-        -tags => [
-          $CompositeWidget->{RefChart}->{TAGS}{xTick}, $CompositeWidget->{RefChart}->{TAGS}{AllTick},
-          $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
-        ],
-      );
       if (  defined $CompositeWidget->{RefChart}->{Axis}{Xaxis}{SpaceBetweenTick}
         and defined $CompositeWidget->{RefChart}->{Legend}{WidthOneCaracter} )
       {
@@ -773,7 +714,7 @@ sub _ViewData {
 
   my $legendmarkercolors = $CompositeWidget->cget( -colordata );
   my $spacingbar         = $CompositeWidget->cget( -spacingbar );
-  my $showvalues         = $CompositeWidget->cget( -showvalues );
+  my $boxplotlinescolor  = $CompositeWidget->cget( -boxplotlinescolor );
 
   # number of value for x axis
   $CompositeWidget->{RefChart}->{Data}{xtickNumber} = $CompositeWidget->{RefChart}->{Data}{NumberXValues};
@@ -832,6 +773,16 @@ sub _ViewData {
       my $ySnonOutlier = $YMin0 - ( $SnonOutlier * $YaxisHeightUnit );
       my $yLnonOutlier = $YMin0 - ( $LnonOutlier * $YaxisHeightUnit );
       my $ymoy         = $YMin0 - ( $moy * $YaxisHeightUnit );
+
+      #update=
+      if ( $CompositeWidget->{RefChart}->{Data}{MinYValue} > 0 ) {
+        $yQuantile1   += ( $CompositeWidget->{RefChart}->{Data}{MinYValue} * $YaxisHeightUnit );
+        $yQuantile3   += ( $CompositeWidget->{RefChart}->{Data}{MinYValue} * $YaxisHeightUnit );
+        $yQuantile2   += ( $CompositeWidget->{RefChart}->{Data}{MinYValue} * $YaxisHeightUnit );
+        $ySnonOutlier += ( $CompositeWidget->{RefChart}->{Data}{MinYValue} * $YaxisHeightUnit );
+        $yLnonOutlier += ( $CompositeWidget->{RefChart}->{Data}{MinYValue} * $YaxisHeightUnit );
+        $ymoy         += ( $CompositeWidget->{RefChart}->{Data}{MinYValue} * $YaxisHeightUnit );
+      }
       $moy = sprintf( "%.2f", $moy );
 
       # color
@@ -871,6 +822,7 @@ MESSAGE
           $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
         ],
         -width => $CompositeWidget->cget( -linewidth ),
+        -fill  => $boxplotlinescolor,
       );
       $CompositeWidget->createLine(
         $xc,
@@ -882,6 +834,7 @@ MESSAGE
           $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
         ],
         -width => $CompositeWidget->cget( -linewidth ),
+        -fill  => $boxplotlinescolor,
       );
 
       # D1
@@ -895,6 +848,7 @@ MESSAGE
           $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
         ],
         -width => $CompositeWidget->cget( -linewidth ),
+        -fill  => $boxplotlinescolor,
       );
       $CompositeWidget->createLine(
         $xc,
@@ -906,6 +860,7 @@ MESSAGE
           $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
         ],
         -width => $CompositeWidget->cget( -linewidth ),
+        -fill  => $boxplotlinescolor,
       );
 
       # box : median
@@ -919,8 +874,9 @@ MESSAGE
           $CompositeWidget->{RefChart}->{TAGS}{AllData},
           $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
         ],
-        -width => $CompositeWidget->cget( -linewidth ),
-        -fill  => $LineColor,
+        -width   => $CompositeWidget->cget( -linewidth ),
+        -fill    => $LineColor,
+        -outline => $boxplotlinescolor,
       );
 
       # Q2 : median
@@ -934,6 +890,7 @@ MESSAGE
           $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
         ],
         -width => $CompositeWidget->cget( -linewidth ),
+        -fill  => $boxplotlinescolor,
       );
 
       # Moy
@@ -948,6 +905,7 @@ MESSAGE
             $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
           ],
           -width => $CompositeWidget->cget( -linewidth ),
+          -fill  => $boxplotlinescolor,
         },
       );
 
@@ -958,6 +916,9 @@ MESSAGE
           $CompositeWidget->{RefChart}->{Legend}{MsgBalloon}->{$OutlierTag} = "outlier : $value";
 
           my $yOutlier = $YMin0 - ( $value * $YaxisHeightUnit );
+          if ( $CompositeWidget->{RefChart}->{Data}{MinYValue} > 0 ) {
+            $yOutlier += ( $CompositeWidget->{RefChart}->{Data}{MinYValue} * $YaxisHeightUnit );
+          }
           $CompositeWidget->_CreateType(
             x      => $xc,
             y      => $yOutlier,
@@ -970,6 +931,7 @@ MESSAGE
                 $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
               ],
               -width => $CompositeWidget->cget( -linewidth ),
+              -fill  => $boxplotlinescolor,
             },
           );
           $CompositeWidget->_CreateType(
@@ -984,6 +946,7 @@ MESSAGE
                 $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
               ],
               -width => $CompositeWidget->cget( -linewidth ),
+              -fill  => $boxplotlinescolor,
             },
           );
         }
@@ -1004,6 +967,9 @@ sub plot {
   my ( $CompositeWidget, $RefData, %option ) = @_;
 
   my $yticknumber = $CompositeWidget->cget( -yticknumber );
+  my $yminvalue   = $CompositeWidget->cget( -yminvalue );
+  my $ymaxvalue   = $CompositeWidget->cget( -ymaxvalue );
+  my $interval    = $CompositeWidget->cget( -interval );
 
   if ( defined $option{-substitutionvalue}
     and _isANumber( $option{-substitutionvalue} ) )
@@ -1082,14 +1048,7 @@ sub plot {
   $CompositeWidget->{RefChart}->{Data}{RefAllData}  = $RefData;
   $CompositeWidget->{RefChart}->{Data}{PlotDefined} = 1;
 
-  if ( $CompositeWidget->{RefChart}->{Data}{MinYValue} > 0 ) {
-    $CompositeWidget->{RefChart}->{Data}{MinYValue} = 0;
-  }
-  while ( ( $CompositeWidget->{RefChart}->{Data}{MaxYValue} / $yticknumber ) % 5 != 0 ) {
-    $CompositeWidget->{RefChart}->{Data}{MaxYValue}
-      = int( $CompositeWidget->{RefChart}->{Data}{MaxYValue} + 1 );
-  }
-
+  $CompositeWidget->_ManageMinMaxValues($yticknumber);
   $CompositeWidget->_ChartConstruction;
 
   return 1;
@@ -1197,6 +1156,18 @@ B<-yscrollincrement>
 
 =over 4
 
+=item Name:	B<BoxplotLinescolor>
+
+=item Class: B<BoxplotLinesColor>
+
+=item Switch:	B<-boxplotlinescolor>
+
+Color of lines of boxplots. 
+
+ -boxplotlinescolor => 'red',
+
+Default : B<black>
+
 =item Name:	B<Spacingbar>
 
 =item Class: B<SpacingBar>
@@ -1213,10 +1184,8 @@ Default : B<1>
 
 =head1 WIDGET-SPECIFIC OPTIONS like Tk::Chart::Lines
 
-Many options allow you to configure your graph as you want. 
-The default configuration is already OK, but you can change it.
-these are the same options as L<Tk::Chart::Lines> module
-
+Many options that allow you to configure your graph as you want, but you can skip  
+the default configuration.
 
 =over 4
 
@@ -1286,7 +1255,7 @@ Default : B<40>
 
 =item Switch:	B<-xlabel>
 
-The label to be printed just below the x axis.
+The label to be printed just below the x-axis.
 
  -xlabel => 'X label',
 
@@ -1334,12 +1303,12 @@ Default : B<30>
 
 =item Switch:	B<-xlabelskip>
 
-Print every xlabelskip number under the tick on the x axis. If you have a 
+Print every xlabelskip number under the tick on the x-axis. If you have a 
 dataset wich contain many points, the tick and x values will be overwrite 
 on the graph. This option can help you to clarify your graph.
 Eg: 
 
-  # ['leg1', 'leg2', ...'leg1000', 'leg1001', ... 'leg2000'] => There are 2000 ticks and text values on x axis.
+  # ['leg1', 'leg2', ...'leg1000', 'leg1001', ... 'leg2000'] => There are 2000 ticks and text values on x-axis.
   -xlabelskip => 1 => ['leg1', 'leg3', 'leg5', ...]        # => 1000 ticks will be display.
 
 See also -xvaluesregex option.
@@ -1378,7 +1347,7 @@ Default : B<30>
 
 =item Switch:	B<-xvalueview>
 
-View values on x axis.
+View values on x-axis.
  
  -xvalueview => 0, # 0 or 1
 
@@ -1390,7 +1359,7 @@ Default : B<1>
 
 =item Switch:	B<-xvaluesregex>
 
-View the x values which will match with regex. It allows you to display tick on x axis and values 
+View the x values which will match with regex. It allows you to display tick on x-axis and values 
 that you want. You can combine it with -xlabelskip to display many dataset.
 
  ...
@@ -1409,7 +1378,7 @@ Default : B<qr/.+/>
 
 =item Switch:	B<-ylabel>
 
-The labels to be printed next to y axis.
+The label to be printed next to y-axis.
 
  -ylabel => 'Y label',
 
@@ -1469,11 +1438,48 @@ Default : B<black>
 
 =item Switch:	B<-yvalueview>
 
-View values on y axis.
+View values on y-axis.
  
  -yvalueview => 0, # 0 or 1
 
 Default : B<1>
+
+=item Name:	B<Yminvalue>
+
+=item Class:	B<YMinValue>
+
+=item Switch:	B<-yminvalue>
+
+Minimum value displayed on the y-axis. See also -interval option.
+ 
+ -yminvalue => 10.12,
+
+Default : B<0>
+
+=item Name:	B<Ymaxvalue>
+
+=item Class:	B<YMaxValue>
+
+=item Switch:	B<-ymaxvalue>
+
+Maximum value displayed on the y-axis. See also -interval option.
+ 
+ -ymaxvalue => 5,
+
+Default : B<Computed from data sets>
+
+=item Name:	B<interval>
+
+=item Class:	B<Interval>
+
+=item Switch:	B<-interval>
+
+If set to a true value, -yminvalue and -ymaxvalue will be fixed to minimum and maximum values of data sets. 
+It overwrites -yminvalue and -ymaxvalue options.
+ 
+ -interval => 1, # 0 or 1
+
+Default : B<0>
 
 =item Name:	B<Labelscolor>
 
@@ -1493,7 +1499,7 @@ Default : B<undef>
 
 =item Switch:	B<-valuescolor>
 
-Set the color of x, y values in axis. It combines xvaluecolor 
+Set the color of x, y values in axes. It combines xvaluecolor 
 and yvaluecolor options.
 
  -valuescolor => 'red',
@@ -1532,11 +1538,71 @@ Default : B<undef>
 
 =item Switch:	B<-longticks>
 
-If long_ticks is a true value, ticks will be drawn the same length as the axes.
+If longticks is a true value, x and y ticks will be drawn with the same length as the axes. See also -xlongticks and -ylongticks options. 
 
  -longticks => 1, #  0 or 1
 
 Default : B<0>
+
+=item Name:	B<Longtickscolor>
+
+=item Class: B<LongTicksColor>
+
+=item Switch:	B<-longtickscolor>
+
+Set the color of x and y ticks that will be drawn with the same length as the axes. See also -xlongtickscolor and -ylongtickscolor options.
+
+  -longtickscolor => 'red',
+
+Default : B<undef>
+
+=item Name:	B<XLongticks>
+
+=item Class: B<XLongTicks>
+
+=item Switch:	B<-xlongticks>
+
+If xlongticks is a true value, x ticks will be drawn with the same length as the x-axis. See also -longticks.
+
+ -xlongticks => 1, #  0 or 1
+
+Default : B<0>
+
+=item Name:	B<YLongticks>
+
+=item Class: B<YLongTicks>
+
+=item Switch:	B<-ylongticks>
+
+If ylongticks is a true value, y ticks will be drawn with the same length as the axes. See also -longticks.
+
+ -ylongticks => 1, #  0 or 1
+
+Default : B<0>
+
+=item Name:	B<XLongtickscolor>
+
+=item Class: B<XLongTicksColor>
+
+=item Switch:	B<-xlongtickscolor>
+
+Set the color of xlongticks. See also -xlongtickscolor.
+
+  -xlongtickscolor => 'red',
+
+Default : B<#B3B3B3>
+
+=item Name:	B<YLongtickscolor>
+
+=item Class: B<YLongTicksColor>
+
+=item Switch:	B<-ylongtickscolor>
+
+Set the color of ylongticks. See also -ylongtickscolor.
+
+  -ylongtickscolor => 'red',
+
+Default : B<#B3B3B3>
 
 =item Name:	B<Boxaxis>
 
@@ -1556,7 +1622,7 @@ Default : B<1>
 
 =item Switch:	B<-noaxis>
 
-Hide the axis with ticks and values ticks.
+Hide the axes with ticks and values ticks.
 
  -noaxis => 1, # 0 or 1
 
@@ -1568,7 +1634,7 @@ Default : B<0>
 
 =item Switch:	B<-zeroaxis>
 
-If set to a true value, the axis for y values will only be drawn. 
+If set to a true value, the axes for y values will only be drawn. 
 This might be useful in case your graph contains negative values, 
 but you want it to be clear where the zero value is
 (see also zeroaxisonly and boxaxis).
@@ -1583,14 +1649,26 @@ Default : B<0>
 
 =item Switch:	B<-zeroaxisonly>
 
-If set to a true value, the zero x axis will be drawn and no axis 
+If set to a true value, the zero x-axis will be drawn and no axes 
 at the bottom of the graph will be drawn. 
-The labels for X values will be placed on the zero x axis.
+The labels for X values will be placed on the zero x-axis.
 This works if there is at least one negative value in dataset.
 
  -zeroaxisonly => 1, # 0 or 1
 
 Default : B<0>
+
+=item Name:	B<Axiscolor>
+
+=item Class: B<AxisColor>
+
+=item Switch:	B<-axiscolor>
+
+Color of the axes.
+
+ -axiscolor => 'red',
+
+Default : B<black>
 
 =item Name:	B<Xtickheight>
 
@@ -1622,7 +1700,7 @@ Default : B<1>
 
 =item Switch:	B<-yticknumber>
 
-Number of ticks to print for the Y axis.
+Number of ticks to print for the y-axis.
 
  -yticknumber => 10,
 
@@ -1697,6 +1775,18 @@ Default :
 
 The default array contains 24 colors. If you have more than 24 samples, the next line 
 will have the color of the first array case (red).
+
+=item Name:	B<verbose>
+
+=item Class:	B<Verbose>
+
+=item Switch:	B<-verbose>
+
+Warning will be print if necessary.
+ 
+ -verbose => 0,
+
+Default : B<1>
 
 =back
 
@@ -2028,6 +2118,16 @@ Set the font to legend title text.
  -titlefont => '{Arial} 8 {normal}',
 
 Default : B<{Times} 8 {bold}>
+
+=item *
+
+-legendcolor => I<color>
+
+Color of legend text.
+
+ -legendcolor => 'white',
+
+Default : B<'black'>
 
 =item *
 

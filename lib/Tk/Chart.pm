@@ -3,7 +3,7 @@ package Tk::Chart;
 #==================================================================
 # Author    : Djibril Ousmanou
 # Copyright : 2010
-# Update    : 21/09/2010 16:13:29
+# Update    : 24/10/2010 01:29:33
 # AIM       : Private functions for Tk::Chart modules
 #==================================================================
 use strict;
@@ -11,7 +11,7 @@ use warnings;
 use Carp;
 use Tk::Chart::Utils qw / :DUMMIES /;
 use vars qw($VERSION);
-$VERSION = '1.01';
+$VERSION = '1.14';
 
 use Exporter;
 
@@ -21,11 +21,91 @@ my @ModuleToExport = qw (
   _CreateType              _GetMarkerType _display_line
   _box                     _title         _XLabelPosition
   _YLabelPosition          _ytick         _ChartConstruction
+  _ManageMinMaxValues     _DisplayxTicks  _DisplayyTicks
+  _get_ConfigSpecs
 );
 
 our @ISA         = qw/ Exporter /;
 our @EXPORT_OK   = @ModuleToExport;
 our %EXPORT_TAGS = ( DUMMIES => \@ModuleToExport );
+
+sub _get_ConfigSpecs {
+
+  my $RefConfig = _InitConfig();
+
+  my %Configuration = (
+    -title         => [ 'PASSIVE', 'Title',         'Title',         undef ],
+    -titlecolor    => [ 'PASSIVE', 'Titlecolor',    'TitleColor',    'black' ],
+    -titlefont     => [ 'PASSIVE', 'Titlefont',     'TitleFont',     $RefConfig->{Font}{DefaultTitle} ],
+    -titleposition => [ 'PASSIVE', 'Titleposition', 'TitlePosition', 'center' ],
+    -titleheight   => [ 'PASSIVE', 'Titleheight',   'TitleHeight',   $RefConfig->{Title}{Height} ],
+
+    -xlabel         => [ 'PASSIVE', 'Xlabel',         'XLabel',         undef ],
+    -xlabelcolor    => [ 'PASSIVE', 'Xlabelcolor',    'XLabelColor',    'black' ],
+    -xlabelfont     => [ 'PASSIVE', 'Xlabelfont',     'XLabelFont',     $RefConfig->{Font}{DefaultLabel} ],
+    -xlabelposition => [ 'PASSIVE', 'Xlabelposition', 'XLabelPosition', 'center' ],
+    -xlabelheight => [ 'PASSIVE', 'Xlabelheight', 'XLabelHeight', $RefConfig->{Axis}{Xaxis}{xlabelHeight} ],
+    -xlabelskip   => [ 'PASSIVE', 'Xlabelskip',   'XLabelSkip',   0 ],
+
+    -xvaluecolor    => [ 'PASSIVE', 'Xvaluecolor',    'XValueColor',    'black' ],
+    -xvaluevertical => [ 'PASSIVE', 'Xvaluevertical', 'XValueVertical', 0 ],
+    -xvaluespace => [ 'PASSIVE', 'Xvaluespace', 'XValueSpace', $RefConfig->{Axis}{Xaxis}{ScaleValuesHeight} ],
+    -xvalueview  => [ 'PASSIVE', 'Xvalueview',  'XValueView',  1 ],
+    -yvalueview  => [ 'PASSIVE', 'Yvalueview',  'YValueView',  1 ],
+    -xvaluesregex => [ 'PASSIVE', 'Xvaluesregex', 'XValuesRegex', qr/.+/ ],
+
+    -ylabel         => [ 'PASSIVE', 'Ylabel',         'YLabel',         undef ],
+    -ylabelcolor    => [ 'PASSIVE', 'Ylabelcolor',    'YLabelColor',    'black' ],
+    -ylabelfont     => [ 'PASSIVE', 'Ylabelfont',     'YLabelFont',     $RefConfig->{Font}{DefaultLabel} ],
+    -ylabelposition => [ 'PASSIVE', 'Ylabelposition', 'YLabelPosition', 'center' ],
+    -ylabelwidth => [ 'PASSIVE', 'Ylabelwidth', 'YLabelWidth', $RefConfig->{Axis}{Yaxis}{ylabelWidth} ],
+
+    -yvaluecolor => [ 'PASSIVE', 'Yvaluecolor', 'YValueColor', 'black' ],
+
+    -labelscolor => [ 'PASSIVE', 'Labelscolor', 'LabelsColor', undef ],
+    -valuescolor => [ 'PASSIVE', 'Valuescolor', 'ValuesColor', undef ],
+    -textcolor   => [ 'PASSIVE', 'Textcolor',   'TextColor',   undef ],
+    -textfont    => [ 'PASSIVE', 'Textfont',    'TextFont',    undef ],
+
+    -boxaxis      => [ 'PASSIVE', 'Boxaxis',      'BoxAxis',      0 ],
+    -noaxis       => [ 'PASSIVE', 'Noaxis',       'NoAxis',       0 ],
+    -zeroaxisonly => [ 'PASSIVE', 'Zeroaxisonly', 'ZeroAxisOnly', 0 ],
+    -zeroaxis     => [ 'PASSIVE', 'Zeroaxis',     'ZeroAxis',     0 ],
+    -longticks    => [ 'PASSIVE', 'Longticks',    'LongTicks',    0 ],
+
+    -xlongticks      => [ 'PASSIVE', 'XLongticks',      'XLongTicks',      0 ],
+    -ylongticks      => [ 'PASSIVE', 'YLongticks',      'YLongTicks',      0 ],
+    -xlongtickscolor => [ 'PASSIVE', 'XLongtickscolor', 'XLongTicksColor', '#B3B3B3' ],
+    -ylongtickscolor => [ 'PASSIVE', 'YLongtickscolor', 'YLongTicksColor', '#B3B3B3' ],
+    -longtickscolor  => [ 'PASSIVE', 'Longtickscolor',  'LongTicksColor',  undef ],
+    -axiscolor       => [ 'PASSIVE', 'Axiscolor',       'AxisColor',       'black' ],
+
+    -xtickheight => [ 'PASSIVE', 'Xtickheight', 'XTickHeight', $RefConfig->{Axis}{Xaxis}{TickHeight} ],
+    -xtickview   => [ 'PASSIVE', 'Xtickview',   'XTickView',   1 ],
+
+    -yminvalue => [ 'PASSIVE', 'Yminvalue', 'YMinValue', 0 ],
+    -ymaxvalue => [ 'PASSIVE', 'Ymaxvalue', 'YMaxValue', undef ],
+    -interval  => [ 'PASSIVE', 'interval',  'Interval',  0 ],
+
+    # image size
+    -width  => [ 'SELF', 'width',  'Width',  $RefConfig->{Canvas}{Width} ],
+    -height => [ 'SELF', 'height', 'Height', $RefConfig->{Canvas}{Height} ],
+
+    -yticknumber => [ 'PASSIVE', 'Yticknumber', 'YTickNumber', $RefConfig->{Axis}{Yaxis}{TickNumber} ],
+    -ytickwidth  => [ 'PASSIVE', 'Ytickwidth',  'YtickWidth',  $RefConfig->{Axis}{Yaxis}{TickWidth} ],
+    -ytickview   => [ 'PASSIVE', 'Ytickview',   'YTickView',   1 ],
+
+    -alltickview => [ 'PASSIVE', 'Alltickview', 'AllTickView', 1 ],
+
+    -linewidth => [ 'PASSIVE', 'Linewidth', 'LineWidth', 1 ],
+    -colordata => [ 'PASSIVE', 'Colordata', 'ColorData', $RefConfig->{Legend}{Colors} ],
+
+    # verbose mode
+    -verbose => [ 'PASSIVE', 'verbose', 'Verbose', 1 ],
+  );
+
+  return \%Configuration;
+}
 
 sub _InitConfig {
   my $CompositeWidget = shift;
@@ -117,6 +197,8 @@ sub _InitConfig {
       title           => undef,
       titlefont       => '{Times} 12 {bold}',
       titlecolors     => 'black',
+      textcolor       => 'black',
+      legendcolor     => 'black',
       Colors          => [
         'red',     'green',   'blue',    'yellow',  'purple',  'cyan',    '#996600', '#99A6CC',
         '#669933', '#929292', '#006600', '#FFE100', '#00A6FF', '#009060', '#B000E0', '#A08000',
@@ -152,6 +234,7 @@ sub _InitConfig {
       Mixed        => '_MixedTag',
       Legend       => '_LegendTag',
       DashLines    => '_DashLineTag',
+      AllBars      => '_AllBars',
       BarValues    => '_BarValuesTag',
       Boxplot      => '_BoxplotTag',
     },
@@ -167,6 +250,7 @@ sub _InitConfig {
       CurrentX => 100,
       CurrentY => 100,
     },
+    'Mixed' => { DisplayOrder => [qw/ areas bars lines dashlines points /], },
   );
 
   return \%Configuration;
@@ -184,6 +268,7 @@ sub _TreatParameters {
     -showvalues   -startangle     -viewsection  -zeroaxis
     -longticks    -markersize     -pointline
     -smoothline   -spline         -bezier
+    -interval     -xlongticks     -ylongticks   -setlegend
     /;
 
   foreach my $OptionName (@IntegerOption) {
@@ -321,11 +406,6 @@ sub _TreatParameters {
       $CompositeWidget->configure( -startangle => 0 );
     }
   }
-  if ( my $longticks = $CompositeWidget->cget( -longticks ) ) {
-    if ( $longticks == 1 ) {
-      $CompositeWidget->configure( -boxaxis => 1 );
-    }
-  }
 
 =for borderwidth:
   If user call -borderwidth option, the graph will be trunc.
@@ -336,6 +416,25 @@ sub _TreatParameters {
   if ( my $borderwidth = $CompositeWidget->cget( -borderwidth ) ) {
     $CompositeWidget->{RefChart}->{Canvas}{HeightEmptySpace} = $borderwidth + 15;
     $CompositeWidget->{RefChart}->{Canvas}{WidthEmptySpace}  = $borderwidth + 15;
+  }
+
+  #update=
+  my $yminvalue = $CompositeWidget->cget( -yminvalue );
+  if ( defined $yminvalue and !_isANumber($yminvalue) ) {
+    $CompositeWidget->_error( "-yminvalue option must be a number or real number ($yminvalue)", 1 );
+    return;
+  }
+  my $ymaxvalue = $CompositeWidget->cget( -ymaxvalue );
+  if ( defined $ymaxvalue and !_isANumber($ymaxvalue) ) {
+    $CompositeWidget->_error( "-ymaxvalue option must be a number or real number", 1 );
+    return;
+  }
+
+  if ( defined $yminvalue and defined $ymaxvalue ) {
+    unless ( $ymaxvalue > $yminvalue ) {
+      $CompositeWidget->_error( "-ymaxvalue must be greater than -yminvalue option", 1 );
+      return;
+    }
   }
 
   return 1;
@@ -411,11 +510,12 @@ sub _DestroyBalloonAndBind {
 sub _error {
   my ( $CompositeWidget, $ErrorMessage, $Croak ) = @_;
 
+  my $Verbose = $CompositeWidget->cget( -verbose );
   if ( defined $Croak and $Croak == 1 ) {
     croak "[BE CARREFUL] : $ErrorMessage\n";
   }
   else {
-    warn "[WARNING] : $ErrorMessage\n";
+    warn "[WARNING] : $ErrorMessage\n" if ( defined $Verbose and $Verbose == 1 );
   }
 
   return;
@@ -582,6 +682,11 @@ DISPLAY:
 sub _box {
   my ($CompositeWidget) = @_;
 
+  my $axiscolor = $CompositeWidget->cget( -axiscolor );
+  if ( $CompositeWidget->cget( -boxaxis ) == 0 ) {
+    return;
+  }
+
   # close axis
   # X axis 2
   $CompositeWidget->createLine(
@@ -593,6 +698,7 @@ sub _box {
       $CompositeWidget->{RefChart}->{TAGS}{BoxAxis}, $CompositeWidget->{RefChart}->{TAGS}{AllAXIS},
       $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
     ],
+    -fill => $axiscolor,
   );
 
   # Y axis 2
@@ -605,14 +711,90 @@ sub _box {
       $CompositeWidget->{RefChart}->{TAGS}{BoxAxis}, $CompositeWidget->{RefChart}->{TAGS}{AllAXIS},
       $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
     ],
+    -fill => $axiscolor,
   );
 
   return;
 }
 
+sub _DisplayxTicks {
+  my ( $CompositeWidget, $Xtickx1, $Xticky1, $Xtickx2, $Xticky2 ) = @_;
+
+  my $longticks       = $CompositeWidget->cget( -longticks );
+  my $xlongticks      = $CompositeWidget->cget( -xlongticks );
+  my $xlongtickscolor = $CompositeWidget->cget( -xlongtickscolor );
+  my $longtickscolor  = $CompositeWidget->cget( -longtickscolor );
+  my $axiscolor       = $CompositeWidget->cget( -axiscolor );
+
+  # Only short xticks
+  $CompositeWidget->createLine(
+    $Xtickx1, $Xticky1, $Xtickx2, $Xticky2,
+    -tags => [
+      $CompositeWidget->{RefChart}->{TAGS}{xTick}, $CompositeWidget->{RefChart}->{TAGS}{AllTick},
+      $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
+    ],
+    -fill => $axiscolor,
+  );
+
+  # Long xTicks
+  if ( ( defined $longticks and $longticks == 1 ) or ( defined $xlongticks and $xlongticks == 1 ) ) {
+    $Xticky1 = $CompositeWidget->{RefChart}->{Axis}{CyMax};
+    $Xticky2 = $CompositeWidget->{RefChart}->{Axis}{CyMin};
+    $CompositeWidget->createLine(
+      $Xtickx1, $Xticky1, $Xtickx2, $Xticky2,
+      -tags => [
+        $CompositeWidget->{RefChart}->{TAGS}{xTick}, $CompositeWidget->{RefChart}->{TAGS}{AllTick},
+        $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
+      ],
+      -fill => $longtickscolor || $xlongtickscolor,
+      -dash => '.',
+    );
+  }
+
+  return 1;
+}
+
+sub _DisplayyTicks {
+  my ( $CompositeWidget, $Ytickx1, $Yticky1, $Ytickx2, $Yticky2 ) = @_;
+
+  my $longticks       = $CompositeWidget->cget( -longticks );
+  my $ylongticks      = $CompositeWidget->cget( -ylongticks );
+  my $ylongtickscolor = $CompositeWidget->cget( -ylongtickscolor );
+  my $longtickscolor  = $CompositeWidget->cget( -longtickscolor );
+  my $axiscolor       = $CompositeWidget->cget( -axiscolor );
+
+  # Only short yticks
+  $CompositeWidget->createLine(
+    $Ytickx1, $Yticky1, $Ytickx2, $Yticky2,
+    -tags => [
+      $CompositeWidget->{RefChart}->{TAGS}{yTick}, $CompositeWidget->{RefChart}->{TAGS}{AllTick},
+      $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
+    ],
+    -fill => $axiscolor,
+  );
+
+  # Long yTicks
+  if ( ( defined $longticks and $longticks == 1 ) or ( defined $ylongticks and $ylongticks == 1 ) ) {
+    $Ytickx1 = $CompositeWidget->{RefChart}->{Axis}{CxMin};
+    $Ytickx2 = $CompositeWidget->{RefChart}->{Axis}{CxMax};
+    $CompositeWidget->createLine(
+      $Ytickx1, $Yticky1, $Ytickx2, $Yticky2,
+      -tags => [
+        $CompositeWidget->{RefChart}->{TAGS}{yTick}, $CompositeWidget->{RefChart}->{TAGS}{AllTick},
+        $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
+      ],
+      -fill => $longtickscolor || $ylongtickscolor,
+      -dash => '.',
+    );
+  }
+
+  return 1;
+}
+
 sub _ytick {
   my ($CompositeWidget) = @_;
 
+  my $yminvalue = $CompositeWidget->cget( -yminvalue );
   my $longticks = $CompositeWidget->cget( -longticks );
   $CompositeWidget->{RefChart}->{Axis}{Yaxis}{TickNumber} = $CompositeWidget->cget( -yticknumber );
 
@@ -640,24 +822,12 @@ sub _ytick {
     my $Value   = $UnitValue * $TickNumber + $CompositeWidget->{RefChart}->{Data}{MinYValue};
     next if ( $Value == 0 );
 
-    # Long tick
-    if ( defined $longticks and $longticks == 1 ) {
-      $Ytickx1 = $CompositeWidget->{RefChart}->{Axis}{CxMin};
-      $Ytickx2 = $CompositeWidget->{RefChart}->{Axis}{CxMax};
-    }
-
     # round value if to long
-    if ( $Value > 1000000 or length $Value > 7 ) {
-      $Value = _roundValue($Value);
-    }
+    $Value = _roundValue($Value);
 
-    $CompositeWidget->createLine(
-      $Ytickx1, $Yticky1, $Ytickx2, $Yticky2,
-      -tags => [
-        $CompositeWidget->{RefChart}->{TAGS}{yTick}, $CompositeWidget->{RefChart}->{TAGS}{AllTick},
-        $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
-      ],
-    );
+    # Display yticks short or long
+    $CompositeWidget->_DisplayyTicks( $Ytickx1, $Yticky1, $Ytickx2, $Yticky2 );
+
     $CompositeWidget->createText(
       $YValuex, $YValuey,
       -text => $Value,
@@ -669,8 +839,11 @@ sub _ytick {
     );
   }
 
-  # Display 0 value
-  unless ( $CompositeWidget->{RefChart}->{Data}{MinYValue} == 0 ) {
+  # Display 0 value or not
+  unless ( $CompositeWidget->{RefChart}->{Data}{MinYValue} == 0
+    or ( defined $yminvalue and $yminvalue > 0 )
+    or ( $CompositeWidget->{RefChart}->{Data}{MinYValue} > 0 ) )
+  {
     $CompositeWidget->createText(
       $CompositeWidget->{RefChart}->{Axis}{Cx0} - ( $CompositeWidget->{RefChart}->{Axis}{Yaxis}{TickWidth} ),
       $CompositeWidget->{RefChart}->{Axis}{Cy0},
@@ -688,6 +861,7 @@ sub _ytick {
           $CompositeWidget->{RefChart}->{Axis}{Yaxis}{TickWidth}
         + $CompositeWidget->{RefChart}->{Axis}{Yaxis}{ScaleValuesWidth} / 2
     ),
+
     $CompositeWidget->{RefChart}->{Axis}{CyMin},
     -text => _roundValue( $CompositeWidget->{RefChart}->{Data}{MinYValue} ),
     -fill => $CompositeWidget->cget( -yvaluecolor ),
@@ -920,6 +1094,50 @@ sub _YLabelPosition {
   return;
 }
 
+sub _ManageMinMaxValues {
+  my ( $CompositeWidget, $yticknumber, $cumulate ) = @_;
+
+  my $yminvalue = $CompositeWidget->cget( -yminvalue );
+  my $ymaxvalue = $CompositeWidget->cget( -ymaxvalue );
+  my $interval  = $CompositeWidget->cget( -interval );
+
+  if ( defined $yminvalue and defined $ymaxvalue ) {
+    unless (
+      (     $ymaxvalue >= $CompositeWidget->{RefChart}->{Data}{MaxYValue}
+        and $yminvalue <= $CompositeWidget->{RefChart}->{Data}{MinYValue}
+      )
+      or ( defined $interval and $interval == 1 )
+      )
+    {
+      $CompositeWidget->_error("-yminvalue and -ymaxvalue do not include all data");
+    }
+  }
+
+  if ( defined $cumulate and $cumulate == 1 and $CompositeWidget->{RefChart}->{Data}{MinYValue} > 0 ) {
+    $CompositeWidget->{RefChart}->{Data}{MinYValue} = 0;
+  }
+
+  unless ( ( defined $interval and $interval == 1 ) ) {
+    if ( $CompositeWidget->{RefChart}->{Data}{MinYValue} > 0 ) {
+      $CompositeWidget->{RefChart}->{Data}{MinYValue} = 0;
+    }
+    while ( ( $CompositeWidget->{RefChart}->{Data}{MaxYValue} / $yticknumber ) % 5 != 0 ) {
+      $CompositeWidget->{RefChart}->{Data}{MaxYValue}
+        = int( $CompositeWidget->{RefChart}->{Data}{MaxYValue} + 1 );
+    }
+
+    if ( defined $yminvalue and $yminvalue != 0 ) {
+      $CompositeWidget->{RefChart}->{Data}{MinYValue} = $yminvalue;
+    }
+    if ( defined $ymaxvalue and $ymaxvalue != 0 ) {
+      $CompositeWidget->{RefChart}->{Data}{MaxYValue} = $ymaxvalue;
+    }
+
+  }
+
+  return 1;
+}
+
 sub _ChartConstruction {
   my ($CompositeWidget) = @_;
 
@@ -988,9 +1206,6 @@ sub _ChartConstruction {
   }
 
   # Axis
-  if ( $CompositeWidget->cget( -boxaxis ) == 0 ) {
-    $CompositeWidget->delete( $CompositeWidget->{RefChart}->{TAGS}{BoxAxis} );
-  }
   if ( $CompositeWidget->cget( -noaxis ) == 1 ) {
     $CompositeWidget->delete( $CompositeWidget->{RefChart}->{TAGS}{AllAXIS} );
     $CompositeWidget->delete( $CompositeWidget->{RefChart}->{TAGS}{AllTick} );
@@ -1043,6 +1258,17 @@ sub _ChartConstruction {
 
     # Order displaying data
     $CompositeWidget->display_order;
+  }
+
+  # Ticks always in background
+  $CompositeWidget->raise( $CompositeWidget->{RefChart}->{TAGS}{AllData},
+    $CompositeWidget->{RefChart}->{TAGS}{AllTick} );
+
+  # values displayed above the bars must be display over the bars
+  my $showvalues = $CompositeWidget->cget( -showvalues );
+  if ( defined $showvalues and $showvalues == 1 ) {
+    $CompositeWidget->raise( $CompositeWidget->{RefChart}->{TAGS}{BarValues},
+      $CompositeWidget->{RefChart}->{TAGS}{AllBars} );
   }
   return 1;
 }

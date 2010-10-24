@@ -20,7 +20,7 @@ my $pane = $mw->Scrolled(
 $pane->Frame;
 $pane->pack(qw / -fill both -expand 1 /);
 
-my @types        = qw/ areas bars lines points bars dashlines/;
+my @types = qw/ areas bars lines points bars dashlines/;
 my $Chart = $pane->Mixed(
   -title      => 'My graph title',
   -xlabel     => 'X Label',

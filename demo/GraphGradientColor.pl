@@ -54,7 +54,7 @@ $Chart->set_balloon();
 $Chart->plot( \@data );
 
 # background order wanted
-$Chart->display_order( [qw/ areas bars lines dashlines points /] );
+$Chart->display_order;
 
 MainLoop();
 

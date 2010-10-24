@@ -181,6 +181,13 @@ method with bad data.
 
   my @Legends = ( 'legend 1', 'legend 2', 'legend 3' ); # OK
 
+=head2 When I draw a chart with high values with short interval, the Y axe does not take the minimum value of data but always 0, how to change it ?
+
+You have to use the version B<1.14> or higher of L<Tk::Chart> and use B<-interval> or 
+B<-yminvalue> and B<-ymaxvalue> options.
+
+You can see examples in demo directory.
+
 =head1 SEE ALSO
 
 L<Tk::Chart>

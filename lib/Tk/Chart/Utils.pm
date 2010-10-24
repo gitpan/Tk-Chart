@@ -3,7 +3,7 @@ package Tk::Chart::Utils;
 #==================================================================
 # Author    : Djibril Ousmanou
 # Copyright : 2010
-# Update    : 21/09/2010 16:10:55
+# Update    : 22/10/2010 00:42:00
 # AIM       : Private functions and public shared methods
 #             between Tk::Chart modules
 #==================================================================
@@ -12,7 +12,7 @@ use strict;
 use Carp;
 
 use vars qw($VERSION);
-$VERSION = '1.00';
+$VERSION = '1.01';
 
 use Exporter;
 use POSIX qw / floor /;
@@ -205,7 +205,10 @@ sub _NonOutlier {
 
 sub _roundValue {
   my ($Value) = @_;
-  return sprintf( "%.2g", $Value );
+  if ( $Value > 10000 ) {
+    return sprintf( "%.2e", $Value );
+  }
+  return sprintf( "%.5g", $Value );
 }
 
 # Test if value is a real number

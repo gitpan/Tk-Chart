@@ -18,7 +18,7 @@ my $Chart = $mw->Bars(
   -zeroaxisonly => 1,
   -cumulate     => 1,
   -showvalues   => 1,
-  -outlinebar   => 'blue'
+  -outlinebar   => 'blue',
 )->pack(qw / -fill both -expand 1 /);
 
 my @data = (

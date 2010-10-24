@@ -7,12 +7,12 @@ use Carp;
 #==================================================================
 # Author    : Djibril Ousmanou
 # Copyright : 2010
-# Update    : 21/09/2010 16:11:01
+# Update    : 23/10/2010 10:30:53
 # AIM       : Create pie graph
 #==================================================================
 
 use vars qw($VERSION);
-$VERSION = '1.00';
+$VERSION = '1.01';
 
 use base qw/ Tk::Derived Tk::Canvas::GradientColor /;
 use Tk::Balloon;
@@ -40,6 +40,7 @@ sub Populate {
     $CompositeWidget->configure( -highlightthickness => 0 );
   }
 
+  # ConfigSpecs
   $CompositeWidget->ConfigSpecs(
     -title      => [ 'PASSIVE', 'Title',      'Title',      undef ],
     -titlecolor => [ 'PASSIVE', 'Titlecolor', 'TitleColor', 'black' ],
@@ -51,6 +52,13 @@ sub Populate {
     -linewidth  => [ 'PASSIVE', 'Linewidth',  'LineWidth',  2 ],
     -startangle => [ 'PASSIVE', 'Startangle', 'StartAngle', 0 ],
     -colordata  => [ 'PASSIVE', 'Colordata',  'ColorData',  $CompositeWidget->{RefChart}->{Legend}{Colors} ],
+
+    -legendcolor => [ 'PASSIVE', 'Legendcolor', 'LegendColor', 'black' ],
+    -legendfont  => [ 'PASSIVE', 'Legendfont',  'LegendFont',  '{Times} 8 {normal}' ],
+    -setlegend   => [ 'PASSIVE', 'Setlegend',   'SetLegend',   1 ],
+
+    # verbeose mode
+    -verbose => [ 'PASSIVE', 'verbose', 'Verbose', 1 ],
   );
 
   $CompositeWidget->Delegates( DEFAULT => $CompositeWidget, );
@@ -283,6 +291,11 @@ sub _CheckHeightPie {
 sub _Legend {
   my ($CompositeWidget) = @_;
 
+  my $setlegend = $CompositeWidget->cget( -setlegend );
+  unless ( defined $setlegend and $setlegend == 1 ) {
+    return;
+  }
+
 SETLEGEND:
 
   # One legend width
@@ -371,6 +384,12 @@ sub _ViewLegend {
   my ($CompositeWidget) = @_;
 
   my $legendmarkercolors = $CompositeWidget->cget( -colordata );
+  my $legendcolor        = $CompositeWidget->cget( -legendcolor );
+  my $legendfont         = $CompositeWidget->cget( -legendfont );
+  my $setlegend          = $CompositeWidget->cget( -setlegend );
+  unless ( defined $setlegend and $setlegend == 1 ) {
+    return;
+  }
 
   my $IndexColor  = 0;
   my $IndexLegend = 0;
@@ -425,7 +444,12 @@ sub _ViewLegend {
         -text   => $NewLegend,
         -anchor => 'nw',
         -tags   => [ $Tag, $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart}, ],
+        -fill   => $legendcolor,
+
       );
+      if ( defined $legendfont ) {
+        $CompositeWidget->itemconfigure( $Id, -font => $legendfont );
+      }
 
       $IndexColor++;
       $IndexLegend++;
@@ -663,6 +687,54 @@ The angle at which the first data slice will be displayed, with 0 degrees being 
  -startangle => 90,
 
 Default : B<0>
+
+=item Name:	B<verbose>
+
+=item Class:	B<Verbose>
+
+=item Switch:	B<-verbose>
+
+Warning will be print if necessary.
+ 
+ -verbose => 0,
+
+Default : B<1>
+
+=item Name:	B<Legendcolor>
+
+=item Class:	B<LegendColor>
+
+=item Switch:	B<-legendcolor>
+
+Color of legend text.
+ 
+ -legendcolor => 'white',
+
+Default : B<'black'>
+
+=item Name:	B<Legendfont>
+
+=item Class:	B<Legendfont>
+
+=item Switch:	B<-legendfont>
+
+Font of text legend.
+ 
+ -legendfont => '{Arial} 8 {normal}',
+
+Default : B<{Times} 8 {normal}>
+
+=item Name:	B<Setlegend>
+
+=item Class:	B<SetLegend>
+
+=item Switch:	B<-setlegend>
+
+If set to true value, the legend will be display.
+ 
+ -setlegend => 0,
+
+Default : B<1>
 
 =back
 

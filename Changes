@@ -1,7 +1,29 @@
 Revision history for Tk-Chart
 
-1.01    22/09/2010 07:57:44
-        Bug test installation boilerplate.t fixed
+1.14  24/10/2010 01:59:15
+      Many options added :
+        PIE
+          -legendcolor, -legendfont and setlegend
+        BOXPLOT
+          -boxplotlinescolor
+        BARS
+          -barsvaluescolor
+        LINES, POINTS, SPLINES, BARS and BOXPLOTS
+          -xlongticks, ylongticks
+          -xlongtickscolor, ylongtickscolor
+          -axiscolor, longtickscolor
+          
+          -yminvalue and -ymaxvalue to allow you to represent charts with resizing y-axis as you want (example for data with little interval).
+          -interval fix yminvalue and ymaxvalue to minimum and maximum value of data sets.
+          -verbose option allow to disabled warning printing if necessary.
+ 
+           In set_legend methods, -legendcolor added.
+              
+      POD documentation updated.
+      demo updated : http://cpansearch.perl.org/src/DJIBEL/Tk-Chart-1.14/demo/
+            
+1.01  22/09/2010 07:57:44
+      Bug test installation boilerplate.t fixed
 
-1.00    21/09/2010 18:23:28
-        First version
+1.00  21/09/2010 18:23:28
+      First version
