@@ -1,64 +1,72 @@
 package Tk::Chart;
 
 #==================================================================
-# Author    : Djibril Ousmanou
-# Copyright : 2010
-# Update    : 24/10/2010 12:55:59
-# AIM       : Private functions for Tk::Chart modules
+# $Author    : Djibril Ousmanou                                   $
+# $Copyright : 2011                                               $
+# $Update    : 01/01/2011 00:00:00                                $
+# $AIM       : Private functions for Tk::Chart modules            $
 #==================================================================
+
 use strict;
 use warnings;
 use Carp;
 use Tk::Chart::Utils qw / :DUMMIES /;
+
 use vars qw($VERSION);
-$VERSION = '1.15';
+$VERSION = '1.16';
 
 use Exporter;
 
-my @ModuleToExport = qw (
-  _TreatParameters         _InitConfig    _error
-  _CheckSizeLengendAndData _ZoomCalcul    _DestroyBalloonAndBind
-  _CreateType              _GetMarkerType _display_line
-  _box                     _title         _XLabelPosition
-  _YLabelPosition          _ytick         _ChartConstruction
-  _ManageMinMaxValues     _DisplayxTicks  _DisplayyTicks
-  _get_ConfigSpecs
+my @module_export = qw (
+  _treatparameters         _initconfig      _error
+  _checksizelegend_data    _zoomcalcul      _destroyballoon_bind
+  _createtype              _getmarkertype   _display_line
+  _box                     _title           _xlabelposition
+  _ylabelposition          _ytick           _chartconstruction
+  _manage_minmaxvalues     _display_xticks  _display_yticks
+  _get_configspecs
 );
 
-our @ISA         = qw/ Exporter /;
-our @EXPORT_OK   = @ModuleToExport;
-our %EXPORT_TAGS = ( DUMMIES => \@ModuleToExport );
+use base qw/ Exporter /;
 
-sub _get_ConfigSpecs {
+our @EXPORT_OK = @module_export;
+our %EXPORT_TAGS = ( DUMMIES => \@module_export );
+my $DASH = q{.};
+my ( $MIN_ANGLE, $MAX_ANGLE ) = ( 0, 360 );
+my $BORDERWITH_PLUS = 15;
+my $PERCENT         = 100;
 
-  my $RefConfig = _InitConfig();
+sub _get_configspecs {
 
-  my %Configuration = (
+  my $ref_config = _initconfig();
+
+  my %configuration = (
     -title         => [ 'PASSIVE', 'Title',         'Title',         undef ],
     -titlecolor    => [ 'PASSIVE', 'Titlecolor',    'TitleColor',    'black' ],
-    -titlefont     => [ 'PASSIVE', 'Titlefont',     'TitleFont',     $RefConfig->{Font}{DefaultTitle} ],
+    -titlefont     => [ 'PASSIVE', 'Titlefont',     'TitleFont',     $ref_config->{Font}{DefaultTitle} ],
     -titleposition => [ 'PASSIVE', 'Titleposition', 'TitlePosition', 'center' ],
-    -titleheight   => [ 'PASSIVE', 'Titleheight',   'TitleHeight',   $RefConfig->{Title}{Height} ],
+    -titleheight   => [ 'PASSIVE', 'Titleheight',   'TitleHeight',   $ref_config->{Title}{Height} ],
 
     -xlabel         => [ 'PASSIVE', 'Xlabel',         'XLabel',         undef ],
     -xlabelcolor    => [ 'PASSIVE', 'Xlabelcolor',    'XLabelColor',    'black' ],
-    -xlabelfont     => [ 'PASSIVE', 'Xlabelfont',     'XLabelFont',     $RefConfig->{Font}{DefaultLabel} ],
+    -xlabelfont     => [ 'PASSIVE', 'Xlabelfont',     'XLabelFont',     $ref_config->{Font}{DefaultLabel} ],
     -xlabelposition => [ 'PASSIVE', 'Xlabelposition', 'XLabelPosition', 'center' ],
-    -xlabelheight => [ 'PASSIVE', 'Xlabelheight', 'XLabelHeight', $RefConfig->{Axis}{Xaxis}{xlabelHeight} ],
+    -xlabelheight => [ 'PASSIVE', 'Xlabelheight', 'XLabelHeight', $ref_config->{Axis}{Xaxis}{xlabelHeight} ],
     -xlabelskip   => [ 'PASSIVE', 'Xlabelskip',   'XLabelSkip',   0 ],
 
     -xvaluecolor    => [ 'PASSIVE', 'Xvaluecolor',    'XValueColor',    'black' ],
     -xvaluevertical => [ 'PASSIVE', 'Xvaluevertical', 'XValueVertical', 0 ],
-    -xvaluespace => [ 'PASSIVE', 'Xvaluespace', 'XValueSpace', $RefConfig->{Axis}{Xaxis}{ScaleValuesHeight} ],
-    -xvalueview  => [ 'PASSIVE', 'Xvalueview',  'XValueView',  1 ],
-    -yvalueview  => [ 'PASSIVE', 'Yvalueview',  'YValueView',  1 ],
+    -xvaluespace =>
+      [ 'PASSIVE', 'Xvaluespace', 'XValueSpace', $ref_config->{Axis}{Xaxis}{ScaleValuesHeight} ],
+    -xvalueview   => [ 'PASSIVE', 'Xvalueview',   'XValueView',   1 ],
+    -yvalueview   => [ 'PASSIVE', 'Yvalueview',   'YValueView',   1 ],
     -xvaluesregex => [ 'PASSIVE', 'Xvaluesregex', 'XValuesRegex', qr/.+/ ],
 
     -ylabel         => [ 'PASSIVE', 'Ylabel',         'YLabel',         undef ],
     -ylabelcolor    => [ 'PASSIVE', 'Ylabelcolor',    'YLabelColor',    'black' ],
-    -ylabelfont     => [ 'PASSIVE', 'Ylabelfont',     'YLabelFont',     $RefConfig->{Font}{DefaultLabel} ],
+    -ylabelfont     => [ 'PASSIVE', 'Ylabelfont',     'YLabelFont',     $ref_config->{Font}{DefaultLabel} ],
     -ylabelposition => [ 'PASSIVE', 'Ylabelposition', 'YLabelPosition', 'center' ],
-    -ylabelwidth => [ 'PASSIVE', 'Ylabelwidth', 'YLabelWidth', $RefConfig->{Axis}{Yaxis}{ylabelWidth} ],
+    -ylabelwidth => [ 'PASSIVE', 'Ylabelwidth', 'YLabelWidth', $ref_config->{Axis}{Yaxis}{ylabelWidth} ],
 
     -yvaluecolor => [ 'PASSIVE', 'Yvaluecolor', 'YValueColor', 'black' ],
 
@@ -80,7 +88,7 @@ sub _get_ConfigSpecs {
     -ylongtickscolor => [ 'PASSIVE', 'YLongtickscolor', 'YLongTicksColor', '#B3B3B3' ],
     -longtickscolor  => [ 'PASSIVE', 'Longtickscolor',  'LongTicksColor',  undef ],
 
-    -xtickheight => [ 'PASSIVE', 'Xtickheight', 'XTickHeight', $RefConfig->{Axis}{Xaxis}{TickHeight} ],
+    -xtickheight => [ 'PASSIVE', 'Xtickheight', 'XTickHeight', $ref_config->{Axis}{Xaxis}{TickHeight} ],
     -xtickview   => [ 'PASSIVE', 'Xtickview',   'XTickView',   1 ],
 
     -yminvalue => [ 'PASSIVE', 'Yminvalue', 'YMinValue', 0 ],
@@ -88,28 +96,28 @@ sub _get_ConfigSpecs {
     -interval  => [ 'PASSIVE', 'interval',  'Interval',  0 ],
 
     # image size
-    -width  => [ 'SELF', 'width',  'Width',  $RefConfig->{Canvas}{Width} ],
-    -height => [ 'SELF', 'height', 'Height', $RefConfig->{Canvas}{Height} ],
+    -width  => [ 'SELF', 'width',  'Width',  $ref_config->{Canvas}{Width} ],
+    -height => [ 'SELF', 'height', 'Height', $ref_config->{Canvas}{Height} ],
 
-    -yticknumber => [ 'PASSIVE', 'Yticknumber', 'YTickNumber', $RefConfig->{Axis}{Yaxis}{TickNumber} ],
-    -ytickwidth  => [ 'PASSIVE', 'Ytickwidth',  'YtickWidth',  $RefConfig->{Axis}{Yaxis}{TickWidth} ],
+    -yticknumber => [ 'PASSIVE', 'Yticknumber', 'YTickNumber', $ref_config->{Axis}{Yaxis}{TickNumber} ],
+    -ytickwidth  => [ 'PASSIVE', 'Ytickwidth',  'YtickWidth',  $ref_config->{Axis}{Yaxis}{TickWidth} ],
     -ytickview   => [ 'PASSIVE', 'Ytickview',   'YTickView',   1 ],
 
     -alltickview => [ 'PASSIVE', 'Alltickview', 'AllTickView', 1 ],
 
     -linewidth => [ 'PASSIVE', 'Linewidth', 'LineWidth', 1 ],
-    -colordata => [ 'PASSIVE', 'Colordata', 'ColorData', $RefConfig->{Legend}{Colors} ],
+    -colordata => [ 'PASSIVE', 'Colordata', 'ColorData', $ref_config->{Legend}{Colors} ],
 
     # verbose mode
     -verbose => [ 'PASSIVE', 'verbose', 'Verbose', 1 ],
   );
 
-  return \%Configuration;
+  return \%configuration;
 }
 
-sub _InitConfig {
-  my $CompositeWidget = shift;
-  my %Configuration   = (
+sub _initconfig {
+  my $cw            = shift;
+  my %configuration = (
     'Axis' => {
       Cx0   => undef,
       Cx0   => undef,
@@ -253,13 +261,13 @@ sub _InitConfig {
     'Mixed' => { DisplayOrder => [qw/ areas bars lines dashlines points /], },
   );
 
-  return \%Configuration;
+  return \%configuration;
 }
 
-sub _TreatParameters {
-  my ($CompositeWidget) = @_;
+sub _treatparameters {
+  my ($cw) = @_;
 
-  my @IntegerOption = qw /
+  my @integer_option = qw /
     -xlabelheight -xlabelskip     -xvaluespace  -ylabelwidth
     -boxaxis      -noaxis         -zeroaxisonly -xtickheight
     -xtickview    -yticknumber    -ytickwidth   -linewidth
@@ -271,139 +279,131 @@ sub _TreatParameters {
     -interval     -xlongticks     -ylongticks   -setlegend
     /;
 
-  foreach my $OptionName (@IntegerOption) {
-    my $data = $CompositeWidget->cget($OptionName);
-    if ( defined $data and $data !~ m{^\d+$} ) {
-      $CompositeWidget->_error( "'Can't set $OptionName to `$data', $data' isn't numeric", 1 );
+  foreach my $option_name (@integer_option) {
+    my $data = $cw->cget($option_name);
+    if ( ( defined $data ) and ( !_isainteger($data) ) ) {
+      $cw->_error( "Can't set $option_name to '$data', $data' isn't numeric", 1 );
       return;
     }
   }
 
-  my $xvaluesregex = $CompositeWidget->cget( -xvaluesregex );
-  if ( defined $xvaluesregex and ref($xvaluesregex) !~ m{^Regexp$}i ) {
-    $CompositeWidget->_error(
-      "'Can't set -xvaluesregex to `$xvaluesregex', "
-        . "$xvaluesregex' is not a regex expression\nEx : "
-        . "-xvaluesregex => qr/My regex/;",
+  my $xvaluesregex = $cw->cget( -xvaluesregex );
+  if ( ( defined $xvaluesregex ) and ( ref $xvaluesregex ne 'Regexp' ) ) {
+    $cw->_error(
+      "Can't set -xvaluesregex to '$xvaluesregex', $xvaluesregex' is not a regex expression\nEx : -xvaluesregex => qr/my regex/;",
       1
     );
     return;
   }
 
-  my $gradient = $CompositeWidget->cget( -gradient );
-  if ( defined $gradient and ref($gradient) !~ m{^hash$}i ) {
-    $CompositeWidget->_error(
-      "'Can't set -gradient to `$gradient', " . "$gradient' is not a hash reference expression\n", 1 );
+  my $gradient = $cw->cget( -gradient );
+  if ( ( defined $gradient ) and ( ref $gradient ne 'HASH' ) ) {
+    $cw->_error( "Can't set -gradient to '$gradient', " . "$gradient' is not a hash reference expression\n",
+      1 );
     return;
   }
 
-  my $Colors = $CompositeWidget->cget( -colordata );
-  if ( defined $Colors and ref($Colors) ne 'ARRAY' ) {
-    $CompositeWidget->_error(
-      "'Can't set -colordata to `$Colors', "
-        . "$Colors' is not an array reference\nEx : "
-        . "-colordata => [\"blue\",\"#2400FF\",...]",
+  my $colors = $cw->cget( -colordata );
+  if ( ( defined $colors ) and ( ref $colors ne 'ARRAY' ) ) {
+    $cw->_error(
+      "Can't set -colordata to '$colors', '$colors' is not an array reference\nEx : -colordata => ['blue','#2400FF',...]",
       1
     );
     return;
   }
-  my $Markers = $CompositeWidget->cget( -markers );
-  if ( defined $Markers and ref($Markers) ne 'ARRAY' ) {
-    $CompositeWidget->_error(
-      "'Can't set -markers to `$Markers', "
-        . "$Markers' is not an array reference\nEx : "
-        . "-markers => [5,8,2]",
+  my $markers = $cw->cget( -markers );
+  if ( ( defined $markers ) and ( ref $markers ne 'ARRAY' ) ) {
+    $cw->_error(
+      "Can't set -markers to '$markers', $markers' is not an array reference\nEx : -markers => [5,8,2]",
       1
     );
 
     return;
   }
-  my $Typemixed = $CompositeWidget->cget( -typemixed );
-  if ( defined $Typemixed and ref($Typemixed) ne 'ARRAY' ) {
-    $CompositeWidget->_error(
-      "'Can't set -typemixed to `$Typemixed', "
-        . "$Typemixed' is not an array reference\nEx : "
-        . "-typemixed => ['bars','lines',...]",
+  my $type_mixed = $cw->cget( -typemixed );
+  if ( ( defined $type_mixed ) and ( ref $type_mixed ne 'ARRAY' ) ) {
+    $cw->_error(
+      "Can't set -typemixed to '$type_mixed', $type_mixed' is not an array reference\nEx : -typemixed => ['bars','lines',...]",
       1
     );
 
     return;
   }
 
-  if ( my $xtickheight = $CompositeWidget->cget( -xtickheight ) ) {
-    $CompositeWidget->{RefChart}->{Axis}{Xaxis}{TickHeight} = $xtickheight;
+  if ( my $xtickheight = $cw->cget( -xtickheight ) ) {
+    $cw->{RefChart}->{Axis}{Xaxis}{TickHeight} = $xtickheight;
   }
 
   # -smoothline deprecated, use -bezier
-  if ( my $smoothline = $CompositeWidget->cget( -smoothline ) ) {
-    $CompositeWidget->configure( -bezier => $smoothline );
+  if ( my $smoothline = $cw->cget( -smoothline ) ) {
+    $cw->configure( -bezier => $smoothline );
   }
 
-  if ( my $xvaluespace = $CompositeWidget->cget( -xvaluespace ) ) {
-    $CompositeWidget->{RefChart}->{Axis}{Xaxis}{ScaleValuesHeight} = $xvaluespace;
+  if ( my $xvaluespace = $cw->cget( -xvaluespace ) ) {
+    $cw->{RefChart}->{Axis}{Xaxis}{ScaleValuesHeight} = $xvaluespace;
   }
 
-  if ( my $noaxis = $CompositeWidget->cget( -noaxis ) and $CompositeWidget->cget( -noaxis ) == 1 ) {
-    $CompositeWidget->{RefChart}->{Axis}{Xaxis}{ScaleValuesHeight} = 0;
-    $CompositeWidget->{RefChart}->{Axis}{Yaxis}{ScaleValuesWidth}  = 0;
-    $CompositeWidget->{RefChart}->{Axis}{Yaxis}{TickWidth}         = 0;
-    $CompositeWidget->{RefChart}->{Axis}{Xaxis}{TickHeight}        = 0;
+  if ( my $noaxis = $cw->cget( -noaxis ) and $cw->cget( -noaxis ) == 1 ) {
+    $cw->{RefChart}->{Axis}{Xaxis}{ScaleValuesHeight} = 0;
+    $cw->{RefChart}->{Axis}{Yaxis}{ScaleValuesWidth}  = 0;
+    $cw->{RefChart}->{Axis}{Yaxis}{TickWidth}         = 0;
+    $cw->{RefChart}->{Axis}{Xaxis}{TickHeight}        = 0;
   }
 
-  if ( my $title = $CompositeWidget->cget( -title ) ) {
-    if ( my $titleheight = $CompositeWidget->cget( -titleheight ) ) {
-      $CompositeWidget->{RefChart}->{Title}{Height} = $titleheight;
+  if ( my $title = $cw->cget( -title ) ) {
+    if ( my $titleheight = $cw->cget( -titleheight ) ) {
+      $cw->{RefChart}->{Title}{Height} = $titleheight;
     }
   }
   else {
-    $CompositeWidget->{RefChart}->{Title}{Height} = 0;
+    $cw->{RefChart}->{Title}{Height} = 0;
   }
 
-  if ( my $xlabel = $CompositeWidget->cget( -xlabel ) ) {
-    if ( my $xlabelheight = $CompositeWidget->cget( -xlabelheight ) ) {
-      $CompositeWidget->{RefChart}->{Axis}{Xaxis}{xlabelHeight} = $xlabelheight;
+  if ( my $xlabel = $cw->cget( -xlabel ) ) {
+    if ( my $xlabelheight = $cw->cget( -xlabelheight ) ) {
+      $cw->{RefChart}->{Axis}{Xaxis}{xlabelHeight} = $xlabelheight;
     }
   }
   else {
-    $CompositeWidget->{RefChart}->{Axis}{Xaxis}{xlabelHeight} = 0;
+    $cw->{RefChart}->{Axis}{Xaxis}{xlabelHeight} = 0;
   }
 
-  if ( my $ylabel = $CompositeWidget->cget( -ylabel ) ) {
-    if ( my $ylabelWidth = $CompositeWidget->cget( -ylabelWidth ) ) {
-      $CompositeWidget->{RefChart}->{Axis}{Yaxis}{ylabelWidth} = $ylabelWidth;
+  if ( my $ylabel = $cw->cget( -ylabel ) ) {
+    if ( my $ylabel_width = $cw->cget( -ylabelWidth ) ) {
+      $cw->{RefChart}->{Axis}{Yaxis}{ylabelWidth} = $ylabel_width;
     }
   }
   else {
-    $CompositeWidget->{RefChart}->{Axis}{Yaxis}{ylabelWidth} = 0;
+    $cw->{RefChart}->{Axis}{Yaxis}{ylabelWidth} = 0;
   }
 
-  if ( my $ytickwidth = $CompositeWidget->cget( -ytickwidth ) ) {
-    $CompositeWidget->{RefChart}->{Axis}{Yaxis}{TickWidth} = $ytickwidth;
+  if ( my $ytickwidth = $cw->cget( -ytickwidth ) ) {
+    $cw->{RefChart}->{Axis}{Yaxis}{TickWidth} = $ytickwidth;
   }
 
-  if ( my $valuescolor = $CompositeWidget->cget( -valuescolor ) ) {
-    $CompositeWidget->configure( -xvaluecolor => $valuescolor );
-    $CompositeWidget->configure( -yvaluecolor => $valuescolor );
+  if ( my $valuescolor = $cw->cget( -valuescolor ) ) {
+    $cw->configure( -xvaluecolor => $valuescolor );
+    $cw->configure( -yvaluecolor => $valuescolor );
   }
 
-  if ( my $textcolor = $CompositeWidget->cget( -textcolor ) ) {
-    $CompositeWidget->configure( -titlecolor  => $textcolor );
-    $CompositeWidget->configure( -xlabelcolor => $textcolor );
-    $CompositeWidget->configure( -ylabelcolor => $textcolor );
+  if ( my $textcolor = $cw->cget( -textcolor ) ) {
+    $cw->configure( -titlecolor  => $textcolor );
+    $cw->configure( -xlabelcolor => $textcolor );
+    $cw->configure( -ylabelcolor => $textcolor );
   }
-  elsif ( my $labelscolor = $CompositeWidget->cget( -labelscolor ) ) {
-    $CompositeWidget->configure( -xlabelcolor => $labelscolor );
-    $CompositeWidget->configure( -ylabelcolor => $labelscolor );
+  elsif ( my $labelscolor = $cw->cget( -labelscolor ) ) {
+    $cw->configure( -xlabelcolor => $labelscolor );
+    $cw->configure( -ylabelcolor => $labelscolor );
   }
 
-  if ( my $textfont = $CompositeWidget->cget( -textfont ) ) {
-    $CompositeWidget->configure( -titlefont  => $textfont );
-    $CompositeWidget->configure( -xlabelfont => $textfont );
-    $CompositeWidget->configure( -ylabelfont => $textfont );
+  if ( my $textfont = $cw->cget( -textfont ) ) {
+    $cw->configure( -titlefont  => $textfont );
+    $cw->configure( -xlabelfont => $textfont );
+    $cw->configure( -ylabelfont => $textfont );
   }
-  if ( my $startangle = $CompositeWidget->cget( -startangle ) ) {
-    if ( $startangle < 0 or $startangle > 360 ) {
-      $CompositeWidget->configure( -startangle => 0 );
+  if ( my $startangle = $cw->cget( -startangle ) ) {
+    if ( $startangle < $MIN_ANGLE or $startangle > $MAX_ANGLE ) {
+      $cw->configure( -startangle => 0 );
     }
   }
 
@@ -413,26 +413,26 @@ sub _TreatParameters {
 
 =cut
 
-  if ( my $borderwidth = $CompositeWidget->cget( -borderwidth ) ) {
-    $CompositeWidget->{RefChart}->{Canvas}{HeightEmptySpace} = $borderwidth + 15;
-    $CompositeWidget->{RefChart}->{Canvas}{WidthEmptySpace}  = $borderwidth + 15;
+  if ( my $borderwidth = $cw->cget( -borderwidth ) ) {
+    $cw->{RefChart}->{Canvas}{HeightEmptySpace} = $borderwidth + $BORDERWITH_PLUS;
+    $cw->{RefChart}->{Canvas}{WidthEmptySpace}  = $borderwidth + $BORDERWITH_PLUS;
   }
 
   #update=
-  my $yminvalue = $CompositeWidget->cget( -yminvalue );
-  if ( defined $yminvalue and !_isANumber($yminvalue) ) {
-    $CompositeWidget->_error( "-yminvalue option must be a number or real number ($yminvalue)", 1 );
+  my $yminvalue = $cw->cget( -yminvalue );
+  if ( ( defined $yminvalue ) and ( !_isanumber($yminvalue) ) ) {
+    $cw->_error( "-yminvalue option must be a number or real number ($yminvalue)", 1 );
     return;
   }
-  my $ymaxvalue = $CompositeWidget->cget( -ymaxvalue );
-  if ( defined $ymaxvalue and !_isANumber($ymaxvalue) ) {
-    $CompositeWidget->_error( "-ymaxvalue option must be a number or real number", 1 );
+  my $ymaxvalue = $cw->cget( -ymaxvalue );
+  if ( ( defined $ymaxvalue ) and ( !_isanumber($ymaxvalue) ) ) {
+    $cw->_error( '-ymaxvalue option must be a number or real number', 1 );
     return;
   }
 
   if ( defined $yminvalue and defined $ymaxvalue ) {
-    unless ( $ymaxvalue > $yminvalue ) {
-      $CompositeWidget->_error( "-ymaxvalue must be greater than -yminvalue option", 1 );
+    if ( $ymaxvalue <= $yminvalue ) {
+      $cw->_error( '-ymaxvalue must be greater than -yminvalue option', 1 );
       return;
     }
   }
@@ -440,110 +440,105 @@ sub _TreatParameters {
   return 1;
 }
 
-sub _CheckSizeLengendAndData {
-  my ( $CompositeWidget, $RefData, $RefLegend ) = @_;
+sub _checksizelegend_data {
+  my ( $cw, $ref_data, $ref_legend ) = @_;
 
   # Check legend size
-  unless ( defined $RefLegend ) {
-    $CompositeWidget->_error('legend not defined');
+  if ( not defined $ref_legend ) {
+    $cw->_error('legend not defined');
     return;
   }
-  my $SizeLegend = scalar @{$RefLegend};
+  my $size_legend = scalar @{$ref_legend};
 
   # Check size between legend and data
-  my $SizeData = scalar @{$RefData} - 1;
-  unless ( $SizeLegend == $SizeData ) {
-    $CompositeWidget->_error('Legend and array size data are different');
+  my $size_data = scalar @{$ref_data} - 1;
+  if ( $size_legend != $size_data ) {
+    $cw->_error('Legend and array size data are different');
     return;
   }
 
   return 1;
 }
 
-sub _ZoomCalcul {
-  my ( $CompositeWidget, $ZoomX, $ZoomY ) = @_;
+sub _zoomcalcul {
+  my ( $cw, $zoomx, $zoomy ) = @_;
 
-  if ( ( defined $ZoomX and !( _isANumber($ZoomX) or $ZoomX > 0 ) )
-    or ( defined $ZoomY and !( _isANumber($ZoomY) or $ZoomY > 0 ) )
-    or ( not defined $ZoomX and not defined $ZoomY ) )
+  if (
+    !(   ( defined $zoomx and _isanumber($zoomx) and $zoomx > 0 )
+      or ( defined $zoomy and _isanumber($zoomy) and $zoomy > 0 )
+    )
+    )
   {
-    $CompositeWidget->_error( 'zoom value must be defined, numeric and great than 0', 1 );
+    $cw->_error( 'zoom value must be defined, numeric and great than 0', 1 );
     return;
   }
 
-  my $CurrentWidth  = $CompositeWidget->{RefChart}->{Canvas}{Width};
-  my $CurrentHeight = $CompositeWidget->{RefChart}->{Canvas}{Height};
+  my $current_width  = $cw->{RefChart}->{Canvas}{Width};
+  my $current_height = $cw->{RefChart}->{Canvas}{Height};
 
-  my $CentPercentWidth  = ( 100 / $CompositeWidget->{RefChart}->{Zoom}{CurrentX} ) * $CurrentWidth;
-  my $CentPercentHeight = ( 100 / $CompositeWidget->{RefChart}->{Zoom}{CurrentY} ) * $CurrentHeight;
-  my $NewWidth          = ( $ZoomX / 100 ) * $CentPercentWidth
-    if ( defined $ZoomX );
-  my $NewHeight = ( $ZoomY / 100 ) * $CentPercentHeight
-    if ( defined $ZoomY );
+  my ( $new_width, $new_height );
+  my $cent_percent_width  = ( $PERCENT / $cw->{RefChart}->{Zoom}{CurrentX} ) * $current_width;
+  my $cent_percent_height = ( $PERCENT / $cw->{RefChart}->{Zoom}{CurrentY} ) * $current_height;
+  if ( defined $zoomx ) { $new_width                        = ( $zoomx / $PERCENT ) * $cent_percent_width; }
+  if ( defined $zoomy ) { $new_height                       = ( $zoomy / $PERCENT ) * $cent_percent_height; }
+  if ( defined $zoomx ) { $cw->{RefChart}->{Zoom}{CurrentX} = $zoomx; }
+  if ( defined $zoomy ) { $cw->{RefChart}->{Zoom}{CurrentY} = $zoomy; }
 
-  $CompositeWidget->{RefChart}->{Zoom}{CurrentX} = $ZoomX
-    if ( defined $ZoomX );
-  $CompositeWidget->{RefChart}->{Zoom}{CurrentY} = $ZoomY
-    if ( defined $ZoomY );
-
-  return ( $NewWidth, $NewHeight );
+  return ( $new_width, $new_height );
 }
 
-sub _DestroyBalloonAndBind {
-  my ($CompositeWidget) = @_;
+sub _destroyballoon_bind {
+  my ($cw) = @_;
 
   # balloon defined and user want to stop it
-  if ( $CompositeWidget->{RefChart}->{Balloon}{Obj}
-    and Tk::Exists $CompositeWidget->{RefChart}->{Balloon}{Obj} )
+  if ( $cw->{RefChart}->{Balloon}{Obj}
+    and Tk::Exists $cw->{RefChart}->{Balloon}{Obj} )
   {
-    $CompositeWidget->{RefChart}->{Balloon}{Obj}->configure( -state => 'none' );
-    $CompositeWidget->{RefChart}->{Balloon}{Obj}->detach($CompositeWidget);
-
-    #$CompositeWidget->{RefChart}->{Balloon}{Obj}->destroy;
-
-    undef $CompositeWidget->{RefChart}->{Balloon}{Obj};
+    $cw->{RefChart}->{Balloon}{Obj}->configure( -state => 'none' );
+    $cw->{RefChart}->{Balloon}{Obj}->detach($cw);
+    undef $cw->{RefChart}->{Balloon}{Obj};
   }
 
   return;
 }
 
 sub _error {
-  my ( $CompositeWidget, $ErrorMessage, $Croak ) = @_;
+  my ( $cw, $error_message, $croak ) = @_;
 
-  my $Verbose = $CompositeWidget->cget( -verbose );
-  if ( defined $Croak and $Croak == 1 ) {
-    croak "[BE CARREFUL] : $ErrorMessage\n";
+  my $verbose = $cw->cget( -verbose );
+  if ( defined $croak and $croak == 1 ) {
+    croak "[BE CARREFUL] : $error_message\n";
   }
   else {
-    warn "[WARNING] : $ErrorMessage\n" if ( defined $Verbose and $Verbose == 1 );
+    carp "[WARNING] : $error_message\n" if ( defined $verbose and $verbose == 1 );
   }
 
   return;
 }
 
-sub _GetMarkerType {
-  my ( $CompositeWidget, $Number ) = @_;
-  my %MarkerType = (
+sub _getmarkertype {
+  my ( $cw, $number ) = @_;
+  my %marker_type = (
 
-    # N°      Type                Filled
-    1  => [ 'square',           1 ],
-    2  => [ 'square',           0 ],
-    3  => [ 'horizontal cross', 1 ],
-    4  => [ 'diagonal cross',   1 ],
-    5  => [ 'diamond',          1 ],
-    6  => [ 'diamond',          0 ],
-    7  => [ 'circle',           1 ],
-    8  => [ 'circle',           0 ],
-    9  => [ 'horizontal line',  1 ],
-    10 => [ 'vertical line',    1 ],
+    # Num      Type                Filled
+    '1'  => [ 'square',           '1' ],
+    '2'  => [ 'square',           '0' ],
+    '3'  => [ 'horizontal cross', '1' ],
+    '4'  => [ 'diagonal cross',   '1' ],
+    '5'  => [ 'diamond',          '1' ],
+    '6'  => [ 'diamond',          '0' ],
+    '7'  => [ 'circle',           '1' ],
+    '8'  => [ 'circle',           '0' ],
+    '9'  => [ 'horizontal line',  '1' ],
+    '10' => [ 'vertical line',    '1' ],
   );
 
-  return unless ( defined $MarkerType{$Number} );
+  if ( !$marker_type{$number} ) { return; }
 
-  return $MarkerType{$Number};
+  return $marker_type{$number};
 }
 
-=for _CreateType
+=for _createtype
   Calculate different points coord to create a rectangle, circle, 
   verticale or horizontal line, a cross, a plus and a diamond 
   from a point coord.
@@ -558,70 +553,70 @@ sub _GetMarkerType {
 
 =cut
 
-sub _CreateType {
-  my ( $CompositeWidget, %Refcoord ) = @_;
+sub _createtype {
+  my ( $cw, %ref_coord ) = @_;
 
-  if ( $Refcoord{type} eq 'circle' or $Refcoord{type} eq 'square' ) {
-    my $x1 = $Refcoord{x} - ( $Refcoord{pixel} / 2 );
-    my $y1 = $Refcoord{y} + ( $Refcoord{pixel} / 2 );
-    my $x2 = $Refcoord{x} + ( $Refcoord{pixel} / 2 );
-    my $y2 = $Refcoord{y} - ( $Refcoord{pixel} / 2 );
+  if ( $ref_coord{type} eq 'circle' or $ref_coord{type} eq 'square' ) {
+    my $x1 = $ref_coord{x} - ( $ref_coord{pixel} / 2 );
+    my $y1 = $ref_coord{y} + ( $ref_coord{pixel} / 2 );
+    my $x2 = $ref_coord{x} + ( $ref_coord{pixel} / 2 );
+    my $y2 = $ref_coord{y} - ( $ref_coord{pixel} / 2 );
 
-    if ( $Refcoord{type} eq 'circle' ) {
-      $CompositeWidget->createOval( $x1, $y1, $x2, $y2, %{ $Refcoord{option} } );
+    if ( $ref_coord{type} eq 'circle' ) {
+      $cw->createOval( $x1, $y1, $x2, $y2, %{ $ref_coord{option} } );
     }
     else {
-      $CompositeWidget->createRectangle( $x1, $y1, $x2, $y2, %{ $Refcoord{option} } );
+      $cw->createRectangle( $x1, $y1, $x2, $y2, %{ $ref_coord{option} } );
     }
   }
-  elsif ( $Refcoord{type} eq 'horizontal cross' ) {
-    my $x1 = $Refcoord{x};
-    my $y1 = $Refcoord{y} - ( $Refcoord{pixel} / 2 );
+  elsif ( $ref_coord{type} eq 'horizontal cross' ) {
+    my $x1 = $ref_coord{x};
+    my $y1 = $ref_coord{y} - ( $ref_coord{pixel} / 2 );
     my $x2 = $x1;
-    my $y2 = $Refcoord{y} + ( $Refcoord{pixel} / 2 );
-    my $x3 = $Refcoord{x} - ( $Refcoord{pixel} / 2 );
-    my $y3 = $Refcoord{y};
-    my $x4 = $Refcoord{x} + ( $Refcoord{pixel} / 2 );
+    my $y2 = $ref_coord{y} + ( $ref_coord{pixel} / 2 );
+    my $x3 = $ref_coord{x} - ( $ref_coord{pixel} / 2 );
+    my $y3 = $ref_coord{y};
+    my $x4 = $ref_coord{x} + ( $ref_coord{pixel} / 2 );
     my $y4 = $y3;
-    $CompositeWidget->createLine( $x1, $y1, $x2, $y2, %{ $Refcoord{option} } );
-    $CompositeWidget->createLine( $x3, $y3, $x4, $y4, %{ $Refcoord{option} } );
+    $cw->createLine( $x1, $y1, $x2, $y2, %{ $ref_coord{option} } );
+    $cw->createLine( $x3, $y3, $x4, $y4, %{ $ref_coord{option} } );
   }
-  elsif ( $Refcoord{type} eq 'diagonal cross' ) {
-    my $x1 = $Refcoord{x} - ( $Refcoord{pixel} / 2 );
-    my $y1 = $Refcoord{y} + ( $Refcoord{pixel} / 2 );
-    my $x2 = $Refcoord{x} + ( $Refcoord{pixel} / 2 );
-    my $y2 = $Refcoord{y} - ( $Refcoord{pixel} / 2 );
+  elsif ( $ref_coord{type} eq 'diagonal cross' ) {
+    my $x1 = $ref_coord{x} - ( $ref_coord{pixel} / 2 );
+    my $y1 = $ref_coord{y} + ( $ref_coord{pixel} / 2 );
+    my $x2 = $ref_coord{x} + ( $ref_coord{pixel} / 2 );
+    my $y2 = $ref_coord{y} - ( $ref_coord{pixel} / 2 );
     my $x3 = $x1;
     my $y3 = $y2;
     my $x4 = $x2;
     my $y4 = $y1;
-    $CompositeWidget->createLine( $x1, $y1, $x2, $y2, %{ $Refcoord{option} } );
-    $CompositeWidget->createLine( $x3, $y3, $x4, $y4, %{ $Refcoord{option} } );
+    $cw->createLine( $x1, $y1, $x2, $y2, %{ $ref_coord{option} } );
+    $cw->createLine( $x3, $y3, $x4, $y4, %{ $ref_coord{option} } );
   }
-  elsif ( $Refcoord{type} eq 'diamond' ) {
-    my $x1 = $Refcoord{x} - ( $Refcoord{pixel} / 2 );
-    my $y1 = $Refcoord{y};
-    my $x2 = $Refcoord{x};
-    my $y2 = $Refcoord{y} + ( $Refcoord{pixel} / 2 );
-    my $x3 = $Refcoord{x} + ( $Refcoord{pixel} / 2 );
-    my $y3 = $Refcoord{y};
-    my $x4 = $Refcoord{x};
-    my $y4 = $Refcoord{y} - ( $Refcoord{pixel} / 2 );
-    $CompositeWidget->createPolygon( $x1, $y1, $x2, $y2, $x3, $y3, $x4, $y4, %{ $Refcoord{option} } );
+  elsif ( $ref_coord{type} eq 'diamond' ) {
+    my $x1 = $ref_coord{x} - ( $ref_coord{pixel} / 2 );
+    my $y1 = $ref_coord{y};
+    my $x2 = $ref_coord{x};
+    my $y2 = $ref_coord{y} + ( $ref_coord{pixel} / 2 );
+    my $x3 = $ref_coord{x} + ( $ref_coord{pixel} / 2 );
+    my $y3 = $ref_coord{y};
+    my $x4 = $ref_coord{x};
+    my $y4 = $ref_coord{y} - ( $ref_coord{pixel} / 2 );
+    $cw->createPolygon( $x1, $y1, $x2, $y2, $x3, $y3, $x4, $y4, %{ $ref_coord{option} } );
   }
-  elsif ( $Refcoord{type} eq 'vertical line' ) {
-    my $x1 = $Refcoord{x};
-    my $y1 = $Refcoord{y} - ( $Refcoord{pixel} / 2 );
-    my $x2 = $Refcoord{x};
-    my $y2 = $Refcoord{y} + ( $Refcoord{pixel} / 2 );
-    $CompositeWidget->createLine( $x1, $y1, $x2, $y2, %{ $Refcoord{option} } );
+  elsif ( $ref_coord{type} eq 'vertical line' ) {
+    my $x1 = $ref_coord{x};
+    my $y1 = $ref_coord{y} - ( $ref_coord{pixel} / 2 );
+    my $x2 = $ref_coord{x};
+    my $y2 = $ref_coord{y} + ( $ref_coord{pixel} / 2 );
+    $cw->createLine( $x1, $y1, $x2, $y2, %{ $ref_coord{option} } );
   }
-  elsif ( $Refcoord{type} eq 'horizontal line' ) {
-    my $x1 = $Refcoord{x} - ( $Refcoord{pixel} / 2 );
-    my $y1 = $Refcoord{y};
-    my $x2 = $Refcoord{x} + ( $Refcoord{pixel} / 2 );
-    my $y2 = $Refcoord{y};
-    $CompositeWidget->createLine( $x1, $y1, $x2, $y2, %{ $Refcoord{option} } );
+  elsif ( $ref_coord{type} eq 'horizontal line' ) {
+    my $x1 = $ref_coord{x} - ( $ref_coord{pixel} / 2 );
+    my $y1 = $ref_coord{y};
+    my $x2 = $ref_coord{x} + ( $ref_coord{pixel} / 2 );
+    my $y2 = $ref_coord{y};
+    $cw->createLine( $x1, $y1, $x2, $y2, %{ $ref_coord{option} } );
   }
   else {
     return;
@@ -643,34 +638,34 @@ sub _CreateType {
 
 =cut
 
-# $CompositeWidget->_display_line($RefPoints, $LineNumber);
+# $cw->_display_line($ref_points, $line_number);
 sub _display_line {
-  my ( $CompositeWidget, $RefPoints, $LineNumber ) = @_;
+  my ( $cw, $ref_points, $line_number ) = @_;
 
-  my $RefDataToDisplay = $CompositeWidget->{RefChart}->{Data}{RefDataToDisplay};
-  return unless ( defined $RefDataToDisplay and defined $RefDataToDisplay->[$LineNumber] );
+  my $ref_data_to_display = $cw->{RefChart}->{Data}{RefDataToDisplay};
+  if ( !( defined $ref_data_to_display and defined $ref_data_to_display->[$line_number] ) ) { return; }
 
   my %options;
-  my $font  = $CompositeWidget->{RefChart}->{Data}{RefOptionDataToDisplay}{'-font'};
-  my $color = $CompositeWidget->{RefChart}->{Data}{RefOptionDataToDisplay}{'-foreground'};
-  $options{'-font'} = $font  if ( defined $font );
-  $options{'-fill'} = $color if ( defined $color );
+  my $font  = $cw->{RefChart}->{Data}{RefOptionDataToDisplay}{'-font'};
+  my $color = $cw->{RefChart}->{Data}{RefOptionDataToDisplay}{'-foreground'};
+  if ( defined $font )  { $options{'-font'} = $font; }
+  if ( defined $color ) { $options{'-fill'} = $color; }
 
   my $indice_point = 0;
 
 DISPLAY:
-  foreach my $value ( @{ $RefDataToDisplay->[$LineNumber] } ) {
+  foreach my $value ( @{ $ref_data_to_display->[$line_number] } ) {
     if ( defined $value ) {
-      my $x = $RefPoints->[$indice_point];
+      my $x = $ref_points->[$indice_point];
       $indice_point++;
-      my $y = $RefPoints->[$indice_point] - 10;
-      $CompositeWidget->createText(
+      my $y = $ref_points->[$indice_point] - 10;
+      $cw->createText(
         $x, $y,
         -text => $value,
         %options,
       );
       $indice_point++;
-      last DISPLAY unless defined $RefPoints->[$indice_point];
+      last DISPLAY if ( not defined $ref_points->[$indice_point] );
       next DISPLAY;
     }
     $indice_point += 2;
@@ -680,36 +675,36 @@ DISPLAY:
 }
 
 sub _box {
-  my ($CompositeWidget) = @_;
+  my ($cw) = @_;
 
-  my $axiscolor = $CompositeWidget->cget( -axiscolor );
-  if ( $CompositeWidget->cget( -boxaxis ) == 0 ) {
+  my $axiscolor = $cw->cget( -axiscolor );
+  if ( $cw->cget( -boxaxis ) == 0 ) {
     return;
   }
 
   # close axis
   # X axis 2
-  $CompositeWidget->createLine(
-    $CompositeWidget->{RefChart}->{Axis}{CxMin},
-    $CompositeWidget->{RefChart}->{Axis}{CyMax},
-    $CompositeWidget->{RefChart}->{Axis}{CxMax},
-    $CompositeWidget->{RefChart}->{Axis}{CyMax},
+  $cw->createLine(
+    $cw->{RefChart}->{Axis}{CxMin},
+    $cw->{RefChart}->{Axis}{CyMax},
+    $cw->{RefChart}->{Axis}{CxMax},
+    $cw->{RefChart}->{Axis}{CyMax},
     -tags => [
-      $CompositeWidget->{RefChart}->{TAGS}{BoxAxis}, $CompositeWidget->{RefChart}->{TAGS}{AllAXIS},
-      $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
+      $cw->{RefChart}->{TAGS}{BoxAxis}, $cw->{RefChart}->{TAGS}{AllAXIS},
+      $cw->{RefChart}->{TAGS}{AllTagsChart},
     ],
     -fill => $axiscolor,
   );
 
   # Y axis 2
-  $CompositeWidget->createLine(
-    $CompositeWidget->{RefChart}->{Axis}{CxMax},
-    $CompositeWidget->{RefChart}->{Axis}{CyMin},
-    $CompositeWidget->{RefChart}->{Axis}{CxMax},
-    $CompositeWidget->{RefChart}->{Axis}{CyMax},
+  $cw->createLine(
+    $cw->{RefChart}->{Axis}{CxMax},
+    $cw->{RefChart}->{Axis}{CyMin},
+    $cw->{RefChart}->{Axis}{CxMax},
+    $cw->{RefChart}->{Axis}{CyMax},
     -tags => [
-      $CompositeWidget->{RefChart}->{TAGS}{BoxAxis}, $CompositeWidget->{RefChart}->{TAGS}{AllAXIS},
-      $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
+      $cw->{RefChart}->{TAGS}{BoxAxis}, $cw->{RefChart}->{TAGS}{AllAXIS},
+      $cw->{RefChart}->{TAGS}{AllTagsChart},
     ],
     -fill => $axiscolor,
   );
@@ -717,74 +712,86 @@ sub _box {
   return;
 }
 
-sub _DisplayxTicks {
-  my ( $CompositeWidget, $Xtickx1, $Xticky1, $Xtickx2, $Xticky2 ) = @_;
+sub _display_xticks {
+  my ( $cw, $x_tickx1, $x_ticky1, $x_tickx2, $x_ticky2 ) = @_;
 
-  my $longticks       = $CompositeWidget->cget( -longticks );
-  my $xlongticks      = $CompositeWidget->cget( -xlongticks );
-  my $xlongtickscolor = $CompositeWidget->cget( -xlongtickscolor );
-  my $longtickscolor  = $CompositeWidget->cget( -longtickscolor );
-  my $axiscolor       = $CompositeWidget->cget( -axiscolor );
+  my $longticks       = $cw->cget( -longticks );
+  my $xlongticks      = $cw->cget( -xlongticks );
+  my $xlongtickscolor = $cw->cget( -xlongtickscolor );
+  my $longtickscolor  = $cw->cget( -longtickscolor );
+  my $axiscolor       = $cw->cget( -axiscolor );
 
   # Only short xticks
-  $CompositeWidget->createLine(
-    $Xtickx1, $Xticky1, $Xtickx2, $Xticky2,
+  $cw->createLine(
+    $x_tickx1,
+    $x_ticky1,
+    $x_tickx2,
+    $x_ticky2,
     -tags => [
-      $CompositeWidget->{RefChart}->{TAGS}{xTick}, $CompositeWidget->{RefChart}->{TAGS}{AllTick},
-      $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
+      $cw->{RefChart}->{TAGS}{xTick}, $cw->{RefChart}->{TAGS}{AllTick},
+      $cw->{RefChart}->{TAGS}{AllTagsChart},
     ],
     -fill => $axiscolor,
   );
 
   # Long xTicks
   if ( ( defined $longticks and $longticks == 1 ) or ( defined $xlongticks and $xlongticks == 1 ) ) {
-    $Xticky1 = $CompositeWidget->{RefChart}->{Axis}{CyMax};
-    $Xticky2 = $CompositeWidget->{RefChart}->{Axis}{CyMin};
-    $CompositeWidget->createLine(
-      $Xtickx1, $Xticky1, $Xtickx2, $Xticky2,
+    $x_ticky1 = $cw->{RefChart}->{Axis}{CyMax};
+    $x_ticky2 = $cw->{RefChart}->{Axis}{CyMin};
+    $cw->createLine(
+      $x_tickx1,
+      $x_ticky1,
+      $x_tickx2,
+      $x_ticky2,
       -tags => [
-        $CompositeWidget->{RefChart}->{TAGS}{xTick}, $CompositeWidget->{RefChart}->{TAGS}{AllTick},
-        $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
+        $cw->{RefChart}->{TAGS}{xTick}, $cw->{RefChart}->{TAGS}{AllTick},
+        $cw->{RefChart}->{TAGS}{AllTagsChart},
       ],
       -fill => $longtickscolor || $xlongtickscolor,
-      -dash => '.',
+      -dash => $DASH,
     );
   }
 
   return 1;
 }
 
-sub _DisplayyTicks {
-  my ( $CompositeWidget, $Ytickx1, $Yticky1, $Ytickx2, $Yticky2 ) = @_;
+sub _display_yticks {
+  my ( $cw, $y_tickx1, $y_ticky1, $y_tickx2, $y_ticky2 ) = @_;
 
-  my $longticks       = $CompositeWidget->cget( -longticks );
-  my $ylongticks      = $CompositeWidget->cget( -ylongticks );
-  my $ylongtickscolor = $CompositeWidget->cget( -ylongtickscolor );
-  my $longtickscolor  = $CompositeWidget->cget( -longtickscolor );
-  my $axiscolor       = $CompositeWidget->cget( -axiscolor );
+  my $longticks       = $cw->cget( -longticks );
+  my $ylongticks      = $cw->cget( -ylongticks );
+  my $ylongtickscolor = $cw->cget( -ylongtickscolor );
+  my $longtickscolor  = $cw->cget( -longtickscolor );
+  my $axiscolor       = $cw->cget( -axiscolor );
 
   # Only short yticks
-  $CompositeWidget->createLine(
-    $Ytickx1, $Yticky1, $Ytickx2, $Yticky2,
+  $cw->createLine(
+    $y_tickx1,
+    $y_ticky1,
+    $y_tickx2,
+    $y_ticky2,
     -tags => [
-      $CompositeWidget->{RefChart}->{TAGS}{yTick}, $CompositeWidget->{RefChart}->{TAGS}{AllTick},
-      $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
+      $cw->{RefChart}->{TAGS}{yTick}, $cw->{RefChart}->{TAGS}{AllTick},
+      $cw->{RefChart}->{TAGS}{AllTagsChart},
     ],
     -fill => $axiscolor,
   );
 
   # Long yTicks
   if ( ( defined $longticks and $longticks == 1 ) or ( defined $ylongticks and $ylongticks == 1 ) ) {
-    $Ytickx1 = $CompositeWidget->{RefChart}->{Axis}{CxMin};
-    $Ytickx2 = $CompositeWidget->{RefChart}->{Axis}{CxMax};
-    $CompositeWidget->createLine(
-      $Ytickx1, $Yticky1, $Ytickx2, $Yticky2,
+    $y_tickx1 = $cw->{RefChart}->{Axis}{CxMin};
+    $y_tickx2 = $cw->{RefChart}->{Axis}{CxMax};
+    $cw->createLine(
+      $y_tickx1,
+      $y_ticky1,
+      $y_tickx2,
+      $y_ticky2,
       -tags => [
-        $CompositeWidget->{RefChart}->{TAGS}{yTick}, $CompositeWidget->{RefChart}->{TAGS}{AllTick},
-        $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
+        $cw->{RefChart}->{TAGS}{yTick}, $cw->{RefChart}->{TAGS}{AllTick},
+        $cw->{RefChart}->{TAGS}{AllTagsChart},
       ],
       -fill => $longtickscolor || $ylongtickscolor,
-      -dash => '.',
+      -dash => $DASH,
     );
   }
 
@@ -792,95 +799,92 @@ sub _DisplayyTicks {
 }
 
 sub _ytick {
-  my ($CompositeWidget) = @_;
+  my ($cw) = @_;
 
-  my $yminvalue = $CompositeWidget->cget( -yminvalue );
-  my $longticks = $CompositeWidget->cget( -longticks );
-  $CompositeWidget->{RefChart}->{Axis}{Yaxis}{TickNumber} = $CompositeWidget->cget( -yticknumber );
+  my $yminvalue = $cw->cget( -yminvalue );
+  my $longticks = $cw->cget( -longticks );
+  $cw->{RefChart}->{Axis}{Yaxis}{TickNumber} = $cw->cget( -yticknumber );
 
   # space between y ticks
-  my $Space = $CompositeWidget->{RefChart}->{Axis}{Yaxis}{Height}
-    / $CompositeWidget->{RefChart}->{Axis}{Yaxis}{TickNumber};
-  my $UnitValue
-    = ( $CompositeWidget->{RefChart}->{Data}{MaxYValue} - $CompositeWidget->{RefChart}->{Data}{MinYValue} )
-    / $CompositeWidget->{RefChart}->{Axis}{Yaxis}{TickNumber};
+  my $space      = $cw->{RefChart}->{Axis}{Yaxis}{Height} / $cw->{RefChart}->{Axis}{Yaxis}{TickNumber};
+  my $unit_value = ( $cw->{RefChart}->{Data}{MaxYValue} - $cw->{RefChart}->{Data}{MinYValue} )
+    / $cw->{RefChart}->{Axis}{Yaxis}{TickNumber};
 
-  for my $TickNumber ( 1 .. $CompositeWidget->{RefChart}->{Axis}{Yaxis}{TickNumber} ) {
+  for my $tick_number ( 1 .. $cw->{RefChart}->{Axis}{Yaxis}{TickNumber} ) {
 
     # Display y ticks
-    my $Ytickx1 = $CompositeWidget->{RefChart}->{Axis}{Cx0};
-    my $Yticky1 = $CompositeWidget->{RefChart}->{Axis}{CyMin} - ( $TickNumber * $Space );
-    my $Ytickx2
-      = $CompositeWidget->{RefChart}->{Axis}{Cx0} - $CompositeWidget->{RefChart}->{Axis}{Yaxis}{TickWidth};
-    my $Yticky2 = $CompositeWidget->{RefChart}->{Axis}{CyMin} - ( $TickNumber * $Space );
+    my $y_tickx1 = $cw->{RefChart}->{Axis}{Cx0};
+    my $y_ticky1 = $cw->{RefChart}->{Axis}{CyMin} - ( $tick_number * $space );
+    my $y_tickx2 = $cw->{RefChart}->{Axis}{Cx0} - $cw->{RefChart}->{Axis}{Yaxis}{TickWidth};
+    my $y_ticky2 = $cw->{RefChart}->{Axis}{CyMin} - ( $tick_number * $space );
 
-    my $YValuex
-      = $CompositeWidget->{RefChart}->{Axis}{Cx0}
-      - ( $CompositeWidget->{RefChart}->{Axis}{Yaxis}{TickWidth}
-        + $CompositeWidget->{RefChart}->{Axis}{Yaxis}{ScaleValuesWidth} / 2 );
-    my $YValuey = $Yticky1;
-    my $Value   = $UnitValue * $TickNumber + $CompositeWidget->{RefChart}->{Data}{MinYValue};
-    next if ( $Value == 0 );
+    my $y_valuex = $cw->{RefChart}->{Axis}{Cx0}
+      - ( $cw->{RefChart}->{Axis}{Yaxis}{TickWidth} + $cw->{RefChart}->{Axis}{Yaxis}{ScaleValuesWidth} / 2 );
+    my $y_valuey = $y_ticky1;
+    my $value    = $unit_value * $tick_number + $cw->{RefChart}->{Data}{MinYValue};
+    next if ( $value == 0 );
 
     # round value if to long
-    $Value = _roundValue($Value);
+    $value = _roundvalue($value);
 
     # Display yticks short or long
-    $CompositeWidget->_DisplayyTicks( $Ytickx1, $Yticky1, $Ytickx2, $Yticky2 );
+    $cw->_display_yticks( $y_tickx1, $y_ticky1, $y_tickx2, $y_ticky2 );
 
-    $CompositeWidget->createText(
-      $YValuex, $YValuey,
-      -text => $Value,
-      -fill => $CompositeWidget->cget( -yvaluecolor ),
+    $cw->createText(
+      $y_valuex,
+      $y_valuey,
+      -text => $value,
+      -fill => $cw->cget( -yvaluecolor ),
       -tags => [
-        $CompositeWidget->{RefChart}->{TAGS}{yValues}, $CompositeWidget->{RefChart}->{TAGS}{AllValues},
-        $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
+        $cw->{RefChart}->{TAGS}{yValues}, $cw->{RefChart}->{TAGS}{AllValues},
+        $cw->{RefChart}->{TAGS}{AllTagsChart},
       ],
     );
   }
 
   # Display 0 value or not
-  unless ( $CompositeWidget->{RefChart}->{Data}{MinYValue} == 0
-    or ( defined $yminvalue and $yminvalue > 0 )
-    or ( $CompositeWidget->{RefChart}->{Data}{MinYValue} > 0 ) )
+  if (
+    !(   $cw->{RefChart}->{Data}{MinYValue} == 0
+      or ( defined $yminvalue and $yminvalue > 0 )
+      or ( $cw->{RefChart}->{Data}{MinYValue} > 0 )
+    )
+    )
   {
-    $CompositeWidget->createText(
-      $CompositeWidget->{RefChart}->{Axis}{Cx0} - ( $CompositeWidget->{RefChart}->{Axis}{Yaxis}{TickWidth} ),
-      $CompositeWidget->{RefChart}->{Axis}{Cy0},
+    $cw->createText(
+      $cw->{RefChart}->{Axis}{Cx0} - ( $cw->{RefChart}->{Axis}{Yaxis}{TickWidth} ),
+      $cw->{RefChart}->{Axis}{Cy0},
       -text => 0,
       -tags => [
-        $CompositeWidget->{RefChart}->{TAGS}{xValue0}, $CompositeWidget->{RefChart}->{TAGS}{AllValues},
-        $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
+        $cw->{RefChart}->{TAGS}{xValue0}, $cw->{RefChart}->{TAGS}{AllValues},
+        $cw->{RefChart}->{TAGS}{AllTagsChart},
       ],
     );
   }
 
   # Display the minimale value
-  $CompositeWidget->createText(
-    $CompositeWidget->{RefChart}->{Axis}{CxMin} - (
-          $CompositeWidget->{RefChart}->{Axis}{Yaxis}{TickWidth}
-        + $CompositeWidget->{RefChart}->{Axis}{Yaxis}{ScaleValuesWidth} / 2
-    ),
+  $cw->createText(
+    $cw->{RefChart}->{Axis}{CxMin}
+      - ( $cw->{RefChart}->{Axis}{Yaxis}{TickWidth} + $cw->{RefChart}->{Axis}{Yaxis}{ScaleValuesWidth} / 2 ),
 
-    $CompositeWidget->{RefChart}->{Axis}{CyMin},
-    -text => _roundValue( $CompositeWidget->{RefChart}->{Data}{MinYValue} ),
-    -fill => $CompositeWidget->cget( -yvaluecolor ),
+    $cw->{RefChart}->{Axis}{CyMin},
+    -text => _roundvalue( $cw->{RefChart}->{Data}{MinYValue} ),
+    -fill => $cw->cget( -yvaluecolor ),
     -tags => [
-      $CompositeWidget->{RefChart}->{TAGS}{yValues}, $CompositeWidget->{RefChart}->{TAGS}{AllValues},
-      $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
+      $cw->{RefChart}->{TAGS}{yValues}, $cw->{RefChart}->{TAGS}{AllValues},
+      $cw->{RefChart}->{TAGS}{AllTagsChart},
     ],
   );
 
   # Long tick
-  unless ( defined $longticks and $longticks == 1 ) {
-    $CompositeWidget->createLine(
-      $CompositeWidget->{RefChart}->{Axis}{Cx0},
-      $CompositeWidget->{RefChart}->{Axis}{CyMin} - $Space,
-      $CompositeWidget->{RefChart}->{Axis}{Cx0} - $CompositeWidget->{RefChart}->{Axis}{Yaxis}{TickWidth},
-      $CompositeWidget->{RefChart}->{Axis}{CyMin} - $Space,
+  if ( ( not defined $longticks ) or ( $longticks != 1 ) ) {
+    $cw->createLine(
+      $cw->{RefChart}->{Axis}{Cx0},
+      $cw->{RefChart}->{Axis}{CyMin} - $space,
+      $cw->{RefChart}->{Axis}{Cx0} - $cw->{RefChart}->{Axis}{Yaxis}{TickWidth},
+      $cw->{RefChart}->{Axis}{CyMin} - $space,
       -tags => [
-        $CompositeWidget->{RefChart}->{TAGS}{yTick}, $CompositeWidget->{RefChart}->{TAGS}{AllTick},
-        $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart},
+        $cw->{RefChart}->{TAGS}{yTick}, $cw->{RefChart}->{TAGS}{AllTick},
+        $cw->{RefChart}->{TAGS}{AllTagsChart},
       ],
     );
   }
@@ -889,386 +893,370 @@ sub _ytick {
 }
 
 sub _title {
-  my ($CompositeWidget) = @_;
+  my ($cw) = @_;
 
-  my $Title         = $CompositeWidget->cget( -title );
-  my $TitleColor    = $CompositeWidget->cget( -titlecolor );
-  my $TitleFont     = $CompositeWidget->cget( -titlefont );
-  my $titleposition = $CompositeWidget->cget( -titleposition );
+  my $title         = $cw->cget( -title );
+  my $title_color   = $cw->cget( -titlecolor );
+  my $title_font    = $cw->cget( -titlefont );
+  my $titleposition = $cw->cget( -titleposition );
 
   # Title verification
-  unless ($Title) {
-    return;
-  }
+  if ( !$title ) { return; }
 
   # Space before the title
-  my $WidthEmptyBeforeTitle
-    = $CompositeWidget->{RefChart}->{Canvas}{WidthEmptySpace}
-    + $CompositeWidget->{RefChart}->{Axis}{Yaxis}{ylabelWidth}
-    + $CompositeWidget->{RefChart}->{Axis}{Yaxis}{ScaleValuesWidth}
-    + $CompositeWidget->{RefChart}->{Axis}{Yaxis}{TickWidth};
+  my $width_empty_before_title
+    = $cw->{RefChart}->{Canvas}{WidthEmptySpace} 
+    + $cw->{RefChart}->{Axis}{Yaxis}{ylabelWidth}
+    + $cw->{RefChart}->{Axis}{Yaxis}{ScaleValuesWidth}
+    + $cw->{RefChart}->{Axis}{Yaxis}{TickWidth};
 
   # Coordinates title
-  $CompositeWidget->{RefChart}->{Title}{Ctitrex}
-    = ( $CompositeWidget->{RefChart}->{Axis}{Xaxis}{Width} / 2 ) + $WidthEmptyBeforeTitle;
-  $CompositeWidget->{RefChart}->{Title}{Ctitrey} = $CompositeWidget->{RefChart}->{Canvas}{HeightEmptySpace}
-    + ( $CompositeWidget->{RefChart}->{Title}{Height} / 2 );
+  $cw->{RefChart}->{Title}{Ctitrex}
+    = ( $cw->{RefChart}->{Axis}{Xaxis}{Width} / 2 ) + $width_empty_before_title;
+  $cw->{RefChart}->{Title}{Ctitrey}
+    = $cw->{RefChart}->{Canvas}{HeightEmptySpace} + ( $cw->{RefChart}->{Title}{Height} / 2 );
 
   # -width to createText
-  $CompositeWidget->{RefChart}->{Title}{'-width'} = $CompositeWidget->{RefChart}->{Axis}{Xaxis}{Width};
+  $cw->{RefChart}->{Title}{'-width'} = $cw->{RefChart}->{Axis}{Xaxis}{Width};
 
   # display title
   my $anchor;
   if ( $titleposition eq 'left' ) {
-    $CompositeWidget->{RefChart}->{Title}{Ctitrex}  = $WidthEmptyBeforeTitle;
-    $anchor                                         = 'nw';
-    $CompositeWidget->{RefChart}->{Title}{'-width'} = 0;
+    $cw->{RefChart}->{Title}{Ctitrex}  = $width_empty_before_title;
+    $anchor                            = 'nw';
+    $cw->{RefChart}->{Title}{'-width'} = 0;
   }
   elsif ( $titleposition eq 'right' ) {
-    $CompositeWidget->{RefChart}->{Title}{Ctitrex}
-      = $WidthEmptyBeforeTitle + $CompositeWidget->{RefChart}->{Axis}{Xaxis}{Width};
-    $CompositeWidget->{RefChart}->{Title}{'-width'} = 0;
-    $anchor = 'ne';
+    $cw->{RefChart}->{Title}{Ctitrex}  = $width_empty_before_title + $cw->{RefChart}->{Axis}{Xaxis}{Width};
+    $cw->{RefChart}->{Title}{'-width'} = 0;
+    $anchor                            = 'ne';
   }
   else {
     $anchor = 'center';
   }
-  $CompositeWidget->{RefChart}->{Title}{IdTitre} = $CompositeWidget->createText(
-    $CompositeWidget->{RefChart}->{Title}{Ctitrex},
-    $CompositeWidget->{RefChart}->{Title}{Ctitrey},
-    -text   => $Title,
-    -width  => $CompositeWidget->{RefChart}->{Title}{'-width'},
+  $cw->{RefChart}->{Title}{IdTitre} = $cw->createText(
+    $cw->{RefChart}->{Title}{Ctitrex},
+    $cw->{RefChart}->{Title}{Ctitrey},
+    -text   => $title,
+    -width  => $cw->{RefChart}->{Title}{'-width'},
     -anchor => $anchor,
-    -tags   => [ $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart}, ],
+    -tags   => [ $cw->{RefChart}->{TAGS}{AllTagsChart}, ],
   );
-  return if ( $anchor =~ m{^left|right$} );
+  if ( $anchor eq 'left' and $anchor eq 'right' ) { return; }
 
   # get title information
-  my ($Height);
-  ( $CompositeWidget->{RefChart}->{Title}{Ctitrex},
-    $CompositeWidget->{RefChart}->{Title}{Ctitrey},
-    $CompositeWidget->{RefChart}->{Title}{Width}, $Height
-  ) = $CompositeWidget->bbox( $CompositeWidget->{RefChart}->{Title}{IdTitre} );
+  my ($height);
+  ( $cw->{RefChart}->{Title}{Ctitrex},
+    $cw->{RefChart}->{Title}{Ctitrey},
+    $cw->{RefChart}->{Title}{Width}, $height
+  ) = $cw->bbox( $cw->{RefChart}->{Title}{IdTitre} );
 
-  if ( $CompositeWidget->{RefChart}->{Title}{Ctitrey}
-    < $CompositeWidget->{RefChart}->{Canvas}{HeightEmptySpace} )
-  {
+  if ( $cw->{RefChart}->{Title}{Ctitrey} < $cw->{RefChart}->{Canvas}{HeightEmptySpace} ) {
 
     # cut title
-    $CompositeWidget->delete( $CompositeWidget->{RefChart}->{Title}{IdTitre} );
+    $cw->delete( $cw->{RefChart}->{Title}{IdTitre} );
 
-    $CompositeWidget->{RefChart}->{Title}{Ctitrex} = $WidthEmptyBeforeTitle;
-    $CompositeWidget->{RefChart}->{Title}{Ctitrey} = $CompositeWidget->{RefChart}->{Canvas}{HeightEmptySpace}
-      + ( $CompositeWidget->{RefChart}->{Title}{Height} / 2 );
+    $cw->{RefChart}->{Title}{Ctitrex} = $width_empty_before_title;
+    $cw->{RefChart}->{Title}{Ctitrey}
+      = $cw->{RefChart}->{Canvas}{HeightEmptySpace} + ( $cw->{RefChart}->{Title}{Height} / 2 );
 
-    $CompositeWidget->{RefChart}->{Title}{'-width'} = 0;
+    $cw->{RefChart}->{Title}{'-width'} = 0;
 
     # display title
-    $CompositeWidget->{RefChart}->{Title}{IdTitre} = $CompositeWidget->createText(
-      $CompositeWidget->{RefChart}->{Title}{Ctitrex},
-      $CompositeWidget->{RefChart}->{Title}{Ctitrey},
-      -text   => $Title,
-      -width  => $CompositeWidget->{RefChart}->{Title}{'-width'},
+    $cw->{RefChart}->{Title}{IdTitre} = $cw->createText(
+      $cw->{RefChart}->{Title}{Ctitrex},
+      $cw->{RefChart}->{Title}{Ctitrey},
+      -text   => $title,
+      -width  => $cw->{RefChart}->{Title}{'-width'},
       -anchor => 'nw',
-      -tags   => [ $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart}, ],
+      -tags   => [ $cw->{RefChart}->{TAGS}{AllTagsChart}, ],
     );
   }
 
-  $CompositeWidget->itemconfigure(
-    $CompositeWidget->{RefChart}->{Title}{IdTitre},
-    -font => $TitleFont,
-    -fill => $TitleColor,
+  $cw->itemconfigure(
+    $cw->{RefChart}->{Title}{IdTitre},
+    -font => $title_font,
+    -fill => $title_color,
   );
   return;
 }
 
-sub _XLabelPosition {
-  my ($CompositeWidget) = @_;
+sub _xlabelposition {
+  my ($cw) = @_;
 
-  my $xlabel = $CompositeWidget->cget( -xlabel );
+  my $xlabel = $cw->cget( -xlabel );
 
   # no x_label
-  unless ( defined $xlabel ) {
-    return;
-  }
+  if ( not defined $xlabel ) { return; }
 
   # coordinate (CxlabelX, CxlabelY)
-  my $BeforexlabelX
-    = $CompositeWidget->{RefChart}->{Canvas}{WidthEmptySpace}
-    + $CompositeWidget->{RefChart}->{Axis}{Yaxis}{ylabelWidth}
-    + $CompositeWidget->{RefChart}->{Axis}{Yaxis}{ScaleValuesWidth}
-    + $CompositeWidget->{RefChart}->{Axis}{Yaxis}{TickWidth};
-  my $BeforexlabelY
-    = $CompositeWidget->{RefChart}->{Canvas}{HeightEmptySpace} 
-    + $CompositeWidget->{RefChart}->{Title}{Height}
-    + $CompositeWidget->{RefChart}->{Axis}{Yaxis}{Height}
-    + $CompositeWidget->{RefChart}->{Axis}{Xaxis}{TickHeight}
-    + $CompositeWidget->{RefChart}->{Axis}{Xaxis}{ScaleValuesHeight};
+  my $before_xlabel_x
+    = $cw->{RefChart}->{Canvas}{WidthEmptySpace} 
+    + $cw->{RefChart}->{Axis}{Yaxis}{ylabelWidth}
+    + $cw->{RefChart}->{Axis}{Yaxis}{ScaleValuesWidth}
+    + $cw->{RefChart}->{Axis}{Yaxis}{TickWidth};
+  my $before_xlabel_y
+    = $cw->{RefChart}->{Canvas}{HeightEmptySpace} 
+    + $cw->{RefChart}->{Title}{Height}
+    + $cw->{RefChart}->{Axis}{Yaxis}{Height}
+    + $cw->{RefChart}->{Axis}{Xaxis}{TickHeight}
+    + $cw->{RefChart}->{Axis}{Xaxis}{ScaleValuesHeight};
 
-  $CompositeWidget->{RefChart}->{Axis}{Xaxis}{CxlabelX}
-    = $BeforexlabelX + ( $CompositeWidget->{RefChart}->{Axis}{Xaxis}{Width} / 2 );
-  $CompositeWidget->{RefChart}->{Axis}{Xaxis}{CxlabelY}
-    = $BeforexlabelY + ( $CompositeWidget->{RefChart}->{Axis}{Xaxis}{xlabelHeight} / 2 );
+  $cw->{RefChart}->{Axis}{Xaxis}{CxlabelX} = $before_xlabel_x + ( $cw->{RefChart}->{Axis}{Xaxis}{Width} / 2 );
+  $cw->{RefChart}->{Axis}{Xaxis}{CxlabelY}
+    = $before_xlabel_y + ( $cw->{RefChart}->{Axis}{Xaxis}{xlabelHeight} / 2 );
 
   # display xlabel
-  $CompositeWidget->{RefChart}->{Axis}{Xaxis}{Idxlabel} = $CompositeWidget->createText(
-    $CompositeWidget->{RefChart}->{Axis}{Xaxis}{CxlabelX},
-    $CompositeWidget->{RefChart}->{Axis}{Xaxis}{CxlabelY},
+  $cw->{RefChart}->{Axis}{Xaxis}{Idxlabel} = $cw->createText(
+    $cw->{RefChart}->{Axis}{Xaxis}{CxlabelX},
+    $cw->{RefChart}->{Axis}{Xaxis}{CxlabelY},
     -text  => $xlabel,
-    -width => $CompositeWidget->{RefChart}->{Axis}{Xaxis}{Width},
-    -tags  => [ $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart}, ],
+    -width => $cw->{RefChart}->{Axis}{Xaxis}{Width},
+    -tags  => [ $cw->{RefChart}->{TAGS}{AllTagsChart}, ],
   );
 
   # get info ylabel xlabel
-  my ( $width, $Height );
-  ( $CompositeWidget->{RefChart}->{Axis}{Xaxis}{CxlabelX},
-    $CompositeWidget->{RefChart}->{Axis}{Xaxis}{CxlabelY},
-    $width, $Height
-  ) = $CompositeWidget->bbox( $CompositeWidget->{RefChart}->{Axis}{Xaxis}{Idxlabel} );
+  my ( $width, $height );
+  ( $cw->{RefChart}->{Axis}{Xaxis}{CxlabelX}, $cw->{RefChart}->{Axis}{Xaxis}{CxlabelY}, $width, $height )
+    = $cw->bbox( $cw->{RefChart}->{Axis}{Xaxis}{Idxlabel} );
 
-  if ( $CompositeWidget->{RefChart}->{Axis}{Xaxis}{CxlabelY} < $BeforexlabelY ) {
+  if ( $cw->{RefChart}->{Axis}{Xaxis}{CxlabelY} < $before_xlabel_y ) {
 
-    $CompositeWidget->delete( $CompositeWidget->{RefChart}->{Axis}{Xaxis}{Idxlabel} );
+    $cw->delete( $cw->{RefChart}->{Axis}{Xaxis}{Idxlabel} );
 
-    $CompositeWidget->{RefChart}->{Axis}{Xaxis}{CxlabelX} = $BeforexlabelX;
-    $CompositeWidget->{RefChart}->{Axis}{Xaxis}{CxlabelY}
-      = $BeforexlabelY + ( $CompositeWidget->{RefChart}->{Axis}{Xaxis}{xlabelHeight} / 2 );
+    $cw->{RefChart}->{Axis}{Xaxis}{CxlabelX} = $before_xlabel_x;
+    $cw->{RefChart}->{Axis}{Xaxis}{CxlabelY}
+      = $before_xlabel_y + ( $cw->{RefChart}->{Axis}{Xaxis}{xlabelHeight} / 2 );
 
     # display xlabel
-    $CompositeWidget->{RefChart}->{Axis}{Xaxis}{Idxlabel} = $CompositeWidget->createText(
-      $CompositeWidget->{RefChart}->{Axis}{Xaxis}{CxlabelX},
-      $CompositeWidget->{RefChart}->{Axis}{Xaxis}{CxlabelY},
+    $cw->{RefChart}->{Axis}{Xaxis}{Idxlabel} = $cw->createText(
+      $cw->{RefChart}->{Axis}{Xaxis}{CxlabelX},
+      $cw->{RefChart}->{Axis}{Xaxis}{CxlabelY},
       -text   => $xlabel,
       -width  => 0,
       -anchor => 'nw',
-      -tags   => [ $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart}, ],
+      -tags   => [ $cw->{RefChart}->{TAGS}{AllTagsChart}, ],
     );
   }
 
-  $CompositeWidget->itemconfigure(
-    $CompositeWidget->{RefChart}->{Axis}{Xaxis}{Idxlabel},
-    -font => $CompositeWidget->cget( -xlabelfont ),
-    -fill => $CompositeWidget->cget( -xlabelcolor ),
+  $cw->itemconfigure(
+    $cw->{RefChart}->{Axis}{Xaxis}{Idxlabel},
+    -font => $cw->cget( -xlabelfont ),
+    -fill => $cw->cget( -xlabelcolor ),
   );
 
   return;
 }
 
-sub _YLabelPosition {
-  my ($CompositeWidget) = @_;
+sub _ylabelposition {
+  my ($cw) = @_;
 
-  my $ylabel = $CompositeWidget->cget( -ylabel );
+  my $ylabel = $cw->cget( -ylabel );
 
   # no y_label
-  unless ( defined $ylabel ) {
+  if ( not defined $ylabel ) {
     return;
   }
 
   # coordinate (CylabelX, CylabelY)
-  $CompositeWidget->{RefChart}->{Axis}{Yaxis}{CylabelX}
-    = $CompositeWidget->{RefChart}->{Canvas}{WidthEmptySpace}
-    + ( $CompositeWidget->{RefChart}->{Axis}{Yaxis}{ylabelWidth} / 2 );
-  $CompositeWidget->{RefChart}->{Axis}{Yaxis}{CylabelY}
-    = $CompositeWidget->{RefChart}->{Canvas}{HeightEmptySpace} 
-    + $CompositeWidget->{RefChart}->{Title}{Height}
-    + ( $CompositeWidget->{RefChart}->{Axis}{Yaxis}{Height} / 2 );
+  $cw->{RefChart}->{Axis}{Yaxis}{CylabelX}
+    = $cw->{RefChart}->{Canvas}{WidthEmptySpace} + ( $cw->{RefChart}->{Axis}{Yaxis}{ylabelWidth} / 2 );
+  $cw->{RefChart}->{Axis}{Yaxis}{CylabelY}
+    = $cw->{RefChart}->{Canvas}{HeightEmptySpace} 
+    + $cw->{RefChart}->{Title}{Height}
+    + ( $cw->{RefChart}->{Axis}{Yaxis}{Height} / 2 );
 
   # display ylabel
-  $CompositeWidget->{RefChart}->{Axis}{Yaxis}{Idylabel} = $CompositeWidget->createText(
-    $CompositeWidget->{RefChart}->{Axis}{Yaxis}{CylabelX},
-    $CompositeWidget->{RefChart}->{Axis}{Yaxis}{CylabelY},
+  $cw->{RefChart}->{Axis}{Yaxis}{Idylabel} = $cw->createText(
+    $cw->{RefChart}->{Axis}{Yaxis}{CylabelX},
+    $cw->{RefChart}->{Axis}{Yaxis}{CylabelY},
     -text  => $ylabel,
-    -font  => $CompositeWidget->cget( -ylabelfont ),
-    -width => $CompositeWidget->{RefChart}->{Axis}{Yaxis}{ylabelWidth},
-    -fill  => $CompositeWidget->cget( -ylabelcolor ),
-    -tags  => [ $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart}, ],
+    -font  => $cw->cget( -ylabelfont ),
+    -width => $cw->{RefChart}->{Axis}{Yaxis}{ylabelWidth},
+    -fill  => $cw->cget( -ylabelcolor ),
+    -tags  => [ $cw->{RefChart}->{TAGS}{AllTagsChart}, ],
   );
 
   # get info ylabel
-  my ( $Width, $Height );
-  ( $CompositeWidget->{RefChart}->{Axis}{Yaxis}{CylabelX},
-    $CompositeWidget->{RefChart}->{Axis}{Yaxis}{CylabelY},
-    $Width, $Height
-  ) = $CompositeWidget->bbox( $CompositeWidget->{RefChart}->{Axis}{Yaxis}{Idylabel} );
+  my ( $width, $height );
+  ( $cw->{RefChart}->{Axis}{Yaxis}{CylabelX}, $cw->{RefChart}->{Axis}{Yaxis}{CylabelY}, $width, $height )
+    = $cw->bbox( $cw->{RefChart}->{Axis}{Yaxis}{Idylabel} );
 
   return;
 }
 
-sub _ManageMinMaxValues {
-  my ( $CompositeWidget, $yticknumber, $cumulate ) = @_;
+sub _manage_minmaxvalues {
+  my ( $cw, $yticknumber, $cumulate ) = @_;
 
-  my $yminvalue = $CompositeWidget->cget( -yminvalue );
-  my $ymaxvalue = $CompositeWidget->cget( -ymaxvalue );
-  my $interval  = $CompositeWidget->cget( -interval );
+  my $yminvalue = $cw->cget( -yminvalue );
+  my $ymaxvalue = $cw->cget( -ymaxvalue );
+  my $interval  = $cw->cget( -interval );
 
   if ( defined $yminvalue and defined $ymaxvalue ) {
-    unless (
-      (     $ymaxvalue >= $CompositeWidget->{RefChart}->{Data}{MaxYValue}
-        and $yminvalue <= $CompositeWidget->{RefChart}->{Data}{MinYValue}
+    if (
+      !((     $ymaxvalue >= $cw->{RefChart}->{Data}{MaxYValue}
+          and $yminvalue <= $cw->{RefChart}->{Data}{MinYValue}
+        )
+        or ( defined $interval and $interval == 1 )
       )
-      or ( defined $interval and $interval == 1 )
       )
     {
-      $CompositeWidget->_error("-yminvalue and -ymaxvalue do not include all data");
+      $cw->_error('-yminvalue and -ymaxvalue do not include all data');
     }
   }
 
-  if ( defined $cumulate and $cumulate == 1 and $CompositeWidget->{RefChart}->{Data}{MinYValue} > 0 ) {
-    $CompositeWidget->{RefChart}->{Data}{MinYValue} = 0;
+  if ( defined $cumulate and $cumulate == 1 and $cw->{RefChart}->{Data}{MinYValue} > 0 ) {
+    $cw->{RefChart}->{Data}{MinYValue} = 0;
   }
 
-  unless ( ( defined $interval and $interval == 1 ) ) {
-    if ( $CompositeWidget->{RefChart}->{Data}{MinYValue} > 0 ) {
-      $CompositeWidget->{RefChart}->{Data}{MinYValue} = 0;
+  if ( !( defined $interval and $interval == 1 ) ) {
+    if ( $cw->{RefChart}->{Data}{MinYValue} > 0 ) {
+      $cw->{RefChart}->{Data}{MinYValue} = 0;
     }
-    while ( ( $CompositeWidget->{RefChart}->{Data}{MaxYValue} / $yticknumber ) % 5 != 0 ) {
-      $CompositeWidget->{RefChart}->{Data}{MaxYValue}
-        = int( $CompositeWidget->{RefChart}->{Data}{MaxYValue} + 1 );
+    while ( ( $cw->{RefChart}->{Data}{MaxYValue} / $yticknumber ) % 5 != 0 ) {
+      $cw->{RefChart}->{Data}{MaxYValue} = int( $cw->{RefChart}->{Data}{MaxYValue} + 1 );
     }
 
     if ( defined $yminvalue and $yminvalue != 0 ) {
-      $CompositeWidget->{RefChart}->{Data}{MinYValue} = $yminvalue;
+      $cw->{RefChart}->{Data}{MinYValue} = $yminvalue;
     }
     if ( defined $ymaxvalue and $ymaxvalue != 0 ) {
-      $CompositeWidget->{RefChart}->{Data}{MaxYValue} = $ymaxvalue;
+      $cw->{RefChart}->{Data}{MaxYValue} = $ymaxvalue;
     }
-
   }
 
   return 1;
 }
 
-sub _ChartConstruction {
-  my ($CompositeWidget) = @_;
+sub _chartconstruction {
+  my ($cw) = @_;
 
-  unless ( defined $CompositeWidget->{RefChart}->{Data}{PlotDefined} ) {
+  if ( not defined $cw->{RefChart}->{Data}{PlotDefined} ) {
     return;
   }
 
-  $CompositeWidget->clearchart();
-  $CompositeWidget->_TreatParameters();
+  $cw->clearchart();
+  $cw->_treatparameters();
 
   # For background gradient color
-  $CompositeWidget->set_gradientcolor;
+  $cw->set_gradientcolor;
 
   # Height and Width canvas
-  $CompositeWidget->{RefChart}->{Canvas}{Width}  = $CompositeWidget->width;
-  $CompositeWidget->{RefChart}->{Canvas}{Height} = $CompositeWidget->height;
+  $cw->{RefChart}->{Canvas}{Width}  = $cw->width;
+  $cw->{RefChart}->{Canvas}{Height} = $cw->height;
 
   # Pie graph
-  if ( $CompositeWidget->class eq 'Pie' ) {
+  if ( $cw->class eq 'Pie' ) {
 
     # Width Pie
-    $CompositeWidget->{RefChart}->{Pie}{Width} = $CompositeWidget->{RefChart}->{Canvas}{Width}
-      - ( 2 * $CompositeWidget->{RefChart}->{Canvas}{WidthEmptySpace} );
+    $cw->{RefChart}->{Pie}{Width}
+      = $cw->{RefChart}->{Canvas}{Width} - ( 2 * $cw->{RefChart}->{Canvas}{WidthEmptySpace} );
 
-    if ( $CompositeWidget->{RefChart}->{Data}{RefAllData} ) {
-      $CompositeWidget->_titlepie;
-      $CompositeWidget->_ViewData;
-      $CompositeWidget->_ViewLegend();
+    if ( $cw->{RefChart}->{Data}{RefAllData} ) {
+      $cw->_titlepie;
+      $cw->_viewdata;
+      $cw->_viewlegend();
     }
     return;
   }
 
-  $CompositeWidget->_axis();
-  $CompositeWidget->_box();
-  $CompositeWidget->_YLabelPosition();
-  $CompositeWidget->_XLabelPosition();
-  $CompositeWidget->_title();
+  $cw->_axis();
+  $cw->_box();
+  $cw->_ylabelposition();
+  $cw->_xlabelposition();
+  $cw->_title();
 
-  if ( $CompositeWidget->class eq 'Lines' ) {
-    if ( $CompositeWidget->cget( -pointline ) == 1 ) {
-      $CompositeWidget->_ViewDataPoints();
+  if ( $cw->class eq 'Lines' ) {
+    if ( $cw->cget( -pointline ) == 1 ) {
+      $cw->_viewdatapoints();
     }
     else {
-      $CompositeWidget->_ViewDataLines();
+      $cw->_viewdatalines();
     }
   }
   else {
-    $CompositeWidget->_ViewData();
+    $cw->_viewdata();
   }
 
   #
-  unless ( $CompositeWidget->cget( -noaxis ) == 1 ) {
-    $CompositeWidget->_xtick();
-    $CompositeWidget->_ytick();
+  if ( $cw->cget( -noaxis ) != 1 ) {
+    $cw->_xtick();
+    $cw->_ytick();
   }
 
-  if ( $CompositeWidget->{RefChart}->{Legend}{NbrLegend} > 0 ) {
-    $CompositeWidget->_ViewLegend();
-    $CompositeWidget->_Balloon();
+  if ( $cw->{RefChart}->{Legend}{NbrLegend} > 0 ) {
+    $cw->_viewlegend();
+    $cw->_balloon();
   }
 
   # If Y value < 0, don't display O x-axis
-  if ( $CompositeWidget->{RefChart}->{Data}{MaxYValue} < 0 ) {
-    $CompositeWidget->delete( $CompositeWidget->{RefChart}->{TAGS}{xAxis0} );
-    $CompositeWidget->delete( $CompositeWidget->{RefChart}->{TAGS}{xValue0} );
+  if ( $cw->{RefChart}->{Data}{MaxYValue} < 0 ) {
+    $cw->delete( $cw->{RefChart}->{TAGS}{xAxis0} );
+    $cw->delete( $cw->{RefChart}->{TAGS}{xValue0} );
   }
 
   # Axis
-  if ( $CompositeWidget->cget( -noaxis ) == 1 ) {
-    $CompositeWidget->delete( $CompositeWidget->{RefChart}->{TAGS}{AllAXIS} );
-    $CompositeWidget->delete( $CompositeWidget->{RefChart}->{TAGS}{AllTick} );
-    $CompositeWidget->delete( $CompositeWidget->{RefChart}->{TAGS}{AllValues} );
+  if ( $cw->cget( -noaxis ) == 1 ) {
+    $cw->delete( $cw->{RefChart}->{TAGS}{AllAXIS} );
+    $cw->delete( $cw->{RefChart}->{TAGS}{AllTick} );
+    $cw->delete( $cw->{RefChart}->{TAGS}{AllValues} );
   }
-  if (  $CompositeWidget->cget( -zeroaxisonly ) == 1
-    and $CompositeWidget->{RefChart}->{Data}{MaxYValue} > 0
-    and $CompositeWidget->{RefChart}->{Data}{MinYValue} < 0 )
+  if (  $cw->cget( -zeroaxisonly ) == 1
+    and $cw->{RefChart}->{Data}{MaxYValue} > 0
+    and $cw->{RefChart}->{Data}{MinYValue} < 0 )
   {
-    $CompositeWidget->delete( $CompositeWidget->{RefChart}->{TAGS}{xAxis} );
+    $cw->delete( $cw->{RefChart}->{TAGS}{xAxis} );
   }
-  if ( $CompositeWidget->cget( -zeroaxis ) == 1 ) {
-    $CompositeWidget->delete( $CompositeWidget->{RefChart}->{TAGS}{xAxis0} );
-    $CompositeWidget->delete( $CompositeWidget->{RefChart}->{TAGS}{xTick} );
-    $CompositeWidget->delete( $CompositeWidget->{RefChart}->{TAGS}{xValues} );
+  if ( $cw->cget( -zeroaxis ) == 1 ) {
+    $cw->delete( $cw->{RefChart}->{TAGS}{xAxis0} );
+    $cw->delete( $cw->{RefChart}->{TAGS}{xTick} );
+    $cw->delete( $cw->{RefChart}->{TAGS}{xValues} );
   }
-  if ( $CompositeWidget->cget( -xvalueview ) == 0 ) {
-    $CompositeWidget->delete( $CompositeWidget->{RefChart}->{TAGS}{xValues} );
+  if ( $cw->cget( -xvalueview ) == 0 ) {
+    $cw->delete( $cw->{RefChart}->{TAGS}{xValues} );
   }
-  if ( $CompositeWidget->cget( -yvalueview ) == 0 ) {
-    $CompositeWidget->delete( $CompositeWidget->{RefChart}->{TAGS}{yValues} );
+  if ( $cw->cget( -yvalueview ) == 0 ) {
+    $cw->delete( $cw->{RefChart}->{TAGS}{yValues} );
   }
 
   # ticks
-  my $alltickview = $CompositeWidget->cget( -alltickview );
+  my $alltickview = $cw->cget( -alltickview );
   if ( defined $alltickview ) {
     if ( $alltickview == 0 ) {
-      $CompositeWidget->delete( $CompositeWidget->{RefChart}->{TAGS}{AllTick} );
+      $cw->delete( $cw->{RefChart}->{TAGS}{AllTick} );
     }
     else {
-      $CompositeWidget->configure( -ytickview => 1 );
-      $CompositeWidget->configure( -xtickview => 1 );
+      $cw->configure( -ytickview => 1 );
+      $cw->configure( -xtickview => 1 );
     }
   }
   else {
-    if ( $CompositeWidget->cget( -xtickview ) == 0 ) {
-      $CompositeWidget->delete( $CompositeWidget->{RefChart}->{TAGS}{xTick} );
+    if ( $cw->cget( -xtickview ) == 0 ) {
+      $cw->delete( $cw->{RefChart}->{TAGS}{xTick} );
     }
-    if ( $CompositeWidget->cget( -ytickview ) == 0 ) {
-      $CompositeWidget->delete( $CompositeWidget->{RefChart}->{TAGS}{yTick} );
+    if ( $cw->cget( -ytickview ) == 0 ) {
+      $cw->delete( $cw->{RefChart}->{TAGS}{yTick} );
     }
   }
 
   # Legend
-  if ( $CompositeWidget->{RefChart}->{Legend}{box} == 0 ) {
-    $CompositeWidget->delete( $CompositeWidget->{RefChart}->{TAGS}{BoxLegend} );
+  if ( $cw->{RefChart}->{Legend}{box} == 0 ) {
+    $cw->delete( $cw->{RefChart}->{TAGS}{BoxLegend} );
   }
 
-  if ( $CompositeWidget->class eq 'Mixed' ) {
+  if ( $cw->class eq 'Mixed' ) {
 
     # Order displaying data
-    $CompositeWidget->display_order;
+    $cw->display_order;
   }
 
   # Ticks always in background
-  $CompositeWidget->raise( $CompositeWidget->{RefChart}->{TAGS}{AllData},
-    $CompositeWidget->{RefChart}->{TAGS}{AllTick} );
+  $cw->raise( $cw->{RefChart}->{TAGS}{AllData}, $cw->{RefChart}->{TAGS}{AllTick} );
 
   # values displayed above the bars must be display over the bars
-  my $showvalues = $CompositeWidget->cget( -showvalues );
+  my $showvalues = $cw->cget( -showvalues );
   if ( defined $showvalues and $showvalues == 1 ) {
-    $CompositeWidget->raise( $CompositeWidget->{RefChart}->{TAGS}{BarValues},
-      $CompositeWidget->{RefChart}->{TAGS}{AllBars} );
+    $cw->raise( $cw->{RefChart}->{TAGS}{BarValues}, $cw->{RefChart}->{TAGS}{AllBars} );
   }
   return 1;
 }
@@ -1385,9 +1373,12 @@ L<http://search.cpan.org/dist/Tk-Chart/>
 
 =back
 
+=head1 ACKNOWLEDGEMENTS
+
+
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2010 Djibril Ousmanou, all rights reserved.
+Copyright 2011 Djibril Ousmanou, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

@@ -5,13 +5,13 @@ use warnings;
 use Tk;
 use Tk::Chart::Mixed;
 
-my $mw = new MainWindow(
+my $mw = MainWindow->new(
   -title      => 'Background gradient color - Tk::Chart::Mixed',
   -background => 'white',
 );
 
 my @types = ( 'areas', 'bars', 'lines', 'points', 'bars', 'dashlines' );
-my $Chart = $mw->Mixed(
+my $chart = $mw->Mixed(
   -title     => 'Background gradient color - Mixed',
   -xlabel    => 'X Label',
   -ylabel    => 'Y Label',
@@ -22,10 +22,10 @@ my $Chart = $mw->Mixed(
 )->pack(qw / -fill both -expand 1 /);
 
 # enabled background gradient color
-$Chart->enabled_gradientcolor();
+$chart->enabled_gradientcolor();
 
 # set background gradient color (default options)
-$Chart->set_gradientcolor();
+$chart->set_gradientcolor();
 
 my @data = (
   [ '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th' ],
@@ -40,21 +40,21 @@ my @data = (
 );
 
 # Add a legend to the graph
-my @Legends = @types;
-$Chart->set_legend(
+my @legends = @types;
+$chart->set_legend(
   -title       => 'Title legend',
   -data        => [ 'legend 1', 'legend 2', 'legend 3', 'legend 4', 'legend 5', 'legend 6', 'legend 7', ],
   -titlecolors => 'blue',
 );
 
 # Add help identification
-$Chart->set_balloon();
+$chart->set_balloon();
 
 # Create the graph
-$Chart->plot( \@data );
+$chart->plot( \@data );
 
 # background order wanted
-$Chart->display_order;
+$chart->display_order;
 
 MainLoop();
 

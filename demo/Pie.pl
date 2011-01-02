@@ -4,9 +4,9 @@ use warnings;
 use Tk;
 
 use Tk::Chart::Pie;
-my $mw = new MainWindow( -title => 'Tk::Chart::Pie example', );
+my $mw = MainWindow->new( -title => 'Tk::Chart::Pie example', );
 
-my $Chart = $mw->Pie(
+my $chart = $mw->Pie(
   -title      => 'There are currently 231 CPAN mirrors around the World (20/09/2010 18:50:57).',
   -background => 'white',
   -linewidth  => 2,
@@ -14,6 +14,6 @@ my $Chart = $mw->Pie(
 
 my @data = ( [ 'Europe', 'Asia', 'Africa', 'Oceania', 'Americas' ], [ 119, 33, 3, 6, 67 ], );
 
-$Chart->plot( \@data );
+$chart->plot( \@data );
 
 MainLoop();

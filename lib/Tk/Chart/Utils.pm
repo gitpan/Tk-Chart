@@ -1,38 +1,42 @@
 package Tk::Chart::Utils;
 
+#=====================================================================================
+# $Author    : Djibril Ousmanou                                                      $
+# $Copyright : 2011                                                                  $
+# $Update    : 01/01/2011 00:00:00                                                   $
+# $AIM       : Private functions and public shared methods between Tk::Chart modules $
 #==================================================================
-# Author    : Djibril Ousmanou
-# Copyright : 2010
-# Update    : 22/10/2010 00:42:00
-# AIM       : Private functions and public shared methods
-#             between Tk::Chart modules
-#==================================================================
+
 use warnings;
 use strict;
 use Carp;
 
 use vars qw($VERSION);
-$VERSION = '1.01';
+$VERSION = '1.02';
 
 use Exporter;
 use POSIX qw / floor /;
 
-my @ModuleToExport = qw (
-  _MaxArray   _MinArray   _isANumber _roundValue
+my @module_export = qw (
+  _maxarray   _minarray   _isanumber _roundvalue
   zoom        zoomx      zoomy       clearchart
-  _Quantile   _moy       _NonOutlier _GetControlPoints
+  _quantile   _moy       _nonoutlier _get_controlpoints
   enabled_automatic_redraw           disabled_automatic_redraw
   _delete_array_doublon redraw       add_data
   delete_balloon                     set_balloon
+  _isainteger
 );
-my @ModulesDisplay = qw/ display_values /;
-our @ISA         = qw(Exporter);
-our @EXPORT      = @ModuleToExport;
-our @EXPORT_OK   = @ModulesDisplay;
+my @modules_display = qw/ display_values /;
+
+use base qw/ Exporter /;
+our @EXPORT      = @module_export;
+our @EXPORT_OK   = @modules_display;
 our %EXPORT_TAGS = (
-  DUMMIES => \@ModuleToExport,
-  DISPLAY => \@ModulesDisplay,
+  DUMMIES => \@module_export,
+  DISPLAY => \@modules_display,
 );
+
+my $EMPTY = q{};
 
 sub _delete_array_doublon {
   my ($ref_tab) = @_;
@@ -41,24 +45,24 @@ sub _delete_array_doublon {
   return grep { !$temp{$_}++ } @{$ref_tab};
 }
 
-sub _MaxArray {
-  my ($RefNumber) = @_;
+sub _maxarray {
+  my ($ref_number) = @_;
   my $max;
 
-  for my $chiffre ( @{$RefNumber} ) {
-    next unless ( defined $chiffre and _isANumber($chiffre) );
+  for my $chiffre ( @{$ref_number} ) {
+    next if ( !_isanumber($chiffre) );
     $max = _max( $max, $chiffre );
   }
 
   return $max;
 }
 
-sub _MinArray {
-  my ($RefNumber) = @_;
+sub _minarray {
+  my ($ref_number) = @_;
   my $min;
 
-  for my $chiffre ( @{$RefNumber} ) {
-    next unless ( defined $chiffre and _isANumber($chiffre) );
+  for my $chiffre ( @{$ref_number} ) {
+    next if ( !_isanumber($chiffre) );
 
     $min = _min( $min, $chiffre );
   }
@@ -91,26 +95,26 @@ sub _min {
 }
 
 sub _moy {
-  my ($RefValues) = @_;
+  my ($ref_values) = @_;
 
-  my $TotalValues = scalar( @{$RefValues} );
+  my $total_values = scalar @{$ref_values};
 
-  return if ( $TotalValues == 0 );
+  return if ( $total_values == 0 );
 
   my $moy = 0;
-  for my $value ( @{$RefValues} ) {
+  for my $value ( @{$ref_values} ) {
     $moy += $value;
   }
 
-  $moy = ( $moy / $TotalValues );
+  $moy = ( $moy / $total_values );
 
   return $moy;
 }
 
-sub _isPair {
+sub _ispair {
   my ($number) = @_;
 
-  unless ( defined $number and $number =~ m{^\d+$} ) {
+  if ( !_isainteger($number) ) {
     croak "$number not an integer\n";
   }
 
@@ -121,26 +125,36 @@ sub _isPair {
   return;
 }
 
-sub _Median {
-  my ($RefValues) = @_;
+sub _isainteger {
+  my ($number) = @_;
+
+  if ( ( defined $number ) and ( $number =~ m{^\d+$} ) ) {
+    return 1;
+  }
+
+  return;
+}
+
+sub _median {
+  my ($ref_values) = @_;
 
   # sort data
-  my @values = sort { $a <=> $b } @{$RefValues};
-  my $TotalValues = scalar(@values);
+  my @values = sort { $a <=> $b } @{$ref_values};
+  my $total_values = scalar @values;
   my $median;
 
   # Number of data pair
-  if ( _isPair($TotalValues) ) {
+  if ( _ispair($total_values) ) {
 
     # 2 values for center
-    my $Value1 = $values[ $TotalValues / 2 ];
-    my $Value2 = $values[ ( $TotalValues - 2 ) / 2 ];
-    $median = ( $Value1 + $Value2 ) / 2;
+    my $value1 = $values[ $total_values / 2 ];
+    my $value2 = $values[ ( $total_values - 2 ) / 2 ];
+    $median = ( $value1 + $value2 ) / 2;
   }
 
   # Number of data impair
   else {
-    $median = $values[ ( $TotalValues - 1 ) / 2 ];
+    $median = $values[ ( $total_values - 1 ) / 2 ];
   }
 
   return $median;
@@ -148,74 +162,77 @@ sub _Median {
 
 # The Quantile is calculated as the same excel algorithm and
 # is equivalent to quantile type 7 in R quantile package.
-sub _Quantile {
-  my ( $RefData, $QuantileNumber ) = @_;
+sub _quantile {
+  my ( $ref_data, $quantile_number ) = @_;
 
-  my @Values = sort { $a <=> $b } @{$RefData};
-  $QuantileNumber = 1 unless ( defined $QuantileNumber );
+  my @values = sort { $a <=> $b } @{$ref_data};
+  if ( not defined $quantile_number ) { $quantile_number = 1; }
 
-  return $Values[0] if ( $QuantileNumber == 0 );
+  if ( $quantile_number == 0 ) { return $values[0]; }
 
-  my $count = scalar @{$RefData};
+  my $count = scalar @{$ref_data};
 
-  return $Values[ $count - 1 ] if ( $QuantileNumber == 4 );
+  if ( $quantile_number == 4 ) { return $values[ $count - 1 ]; }
 
-  my $K_quantile = ( ( $QuantileNumber / 4 ) * ( $count - 1 ) + 1 );
-  my $F_quantile = $K_quantile - POSIX::floor($K_quantile);
-  $K_quantile = POSIX::floor($K_quantile);
+  my $k_quantile = ( ( $quantile_number / 4 ) * ( $count - 1 ) + 1 );
+  my $f_quantile = $k_quantile - POSIX::floor($k_quantile);
+  $k_quantile = POSIX::floor($k_quantile);
 
   # interpolation
-  my $aK_quantile     = $Values[ $K_quantile - 1 ];
-  my $aKPlus_quantile = $Values[$K_quantile];
+  my $ak_quantile     = $values[ $k_quantile - 1 ];
+  my $akplus_quantile = $values[$k_quantile];
 
   # Calcul quantile
-  my $quantile = $aK_quantile + ( $F_quantile * ( $aKPlus_quantile - $aK_quantile ) );
+  my $quantile = $ak_quantile + ( $f_quantile * ( $akplus_quantile - $ak_quantile ) );
 
   return $quantile;
 }
 
-sub _NonOutlier {
-  my ( $RefValues, $Q1, $Q3 ) = @_;
+sub _nonoutlier {
+  my ( $ref_values, $q1, $q3 ) = @_;
 
   # interquartile range,
-  my $IQR = $Q3 - $Q1;
+  my $iqr = $q3 - $q1;
 
   # low and up boundaries
-  my $LowBoundary = $Q1 - ( 1.5 * $IQR );
-  my $UpBoundary  = $Q3 + ( 1.5 * $IQR );
+  my $low_boundary = $q1 - ( 1.5 * $iqr );
+  my $up_boundary  = $q3 + ( 1.5 * $iqr );
 
   # largest non-outlier and smallest non-outlier
-  my ( $LnonOutlier, $SnonOutlier );
-  for my $Value ( sort { $a <=> $b } @{$RefValues} ) {
-    if ( $Value > $LowBoundary ) {
-      $SnonOutlier = $Value;
+  my ( $l_nonoutlier, $s_nonoutlier );
+  for my $value ( sort { $a <=> $b } @{$ref_values} ) {
+    if ( $value > $low_boundary ) {
+      $s_nonoutlier = $value;
       last;
     }
   }
 
-  for my $Value ( sort { $b <=> $a } @{$RefValues} ) {
-    if ( $Value < $UpBoundary ) {
-      $LnonOutlier = $Value;
+  for my $value ( reverse sort { $a <=> $b } @{$ref_values} ) {
+    if ( $value < $up_boundary ) {
+      $l_nonoutlier = $value;
       last;
     }
   }
 
-  return ( $SnonOutlier, $LnonOutlier );
+  return ( $s_nonoutlier, $l_nonoutlier );
 }
 
-sub _roundValue {
-  my ($Value) = @_;
-  if ( $Value > 10000 ) {
-    return sprintf( "%.2e", $Value );
+sub _roundvalue {
+  my ($value) = @_;
+  if ( $value > 10000 ) {
+    return sprintf '%.2e', $value;
   }
-  return sprintf( "%.5g", $Value );
+  return sprintf '%.5g', $value;
 }
 
 # Test if value is a real number
-sub _isANumber {
-  my ($Value) = @_;
+sub _isanumber {
+  my ($value) = @_;
 
-  if ( $Value
+  if ( not defined $value ) {
+    return;
+  }
+  if ( $value
     =~ /^(?:(?i)(?:[+-]?)(?:(?=[0123456789]|[.])(?:[0123456789]*)(?:(?:[.])(?:[0123456789]{0,}))?)(?:(?:[E])(?:(?:[+-]?)(?:[0123456789]+))|))$/
     )
   {
@@ -225,37 +242,37 @@ sub _isANumber {
   return;
 }
 
-sub _GetControlPoints {
-  my ( $CompositeWidget, $RefArray ) = @_;
+sub _get_controlpoints {
+  my ( $cw, $ref_array ) = @_;
 
-  my $NbrElt = scalar @{$RefArray};
+  my $nbrelt = scalar @{$ref_array};
 
-  unless ( $NbrElt > 4 ) {
-    return $RefArray;
+  if ( $nbrelt <= 4 ) {
+    return $ref_array;
   }
 
   # First element
-  my @AllControlPoints = ( $RefArray->[0], $RefArray->[1] );
+  my @all_controlpoints = ( $ref_array->[0], $ref_array->[1] );
 
-  for ( my $i = 0; $i <= $NbrElt; $i = $i + 2 ) {
-    my @PointA = ( $RefArray->[$i], $RefArray->[ $i + 1 ] );
-    my @PointB = ( $RefArray->[ $i + 2 ], $RefArray->[ $i + 3 ] );
-    my @PointC = ( $RefArray->[ $i + 4 ], $RefArray->[ $i + 5 ] );
+  for ( my $i = 0; $i <= $nbrelt; $i = $i + 2 ) {
+    my @point_a = ( $ref_array->[$i], $ref_array->[ $i + 1 ] );
+    my @point_b = ( $ref_array->[ $i + 2 ], $ref_array->[ $i + 3 ] );
+    my @point_c = ( $ref_array->[ $i + 4 ], $ref_array->[ $i + 5 ] );
 
-    last unless ( defined $RefArray->[ $i + 5 ] );
+    last if ( !$ref_array->[ $i + 5 ] );
 
-    # Equation between PointA and PointC
+    # Equation between pointa and PointC
     # Coef = (yc -ya) / (xc -xa)
     # D1 : Y = Coef * X + (ya - (Coef * xa))
-    my $coef = ( $PointC[1] - $PointA[1] ) / ( $PointC[0] - $PointA[0] );
+    my $coef = ( $point_c[1] - $point_a[1] ) / ( $point_c[0] - $point_a[0] );
 
     # Equation for D2 ligne paralelle to [AC] with PointB
     # D2 : Y = (Coef * X) + yb - (coef * xb)
     # The 2 control points
-    my $D2line = sub {
+    my $d2line = sub {
       my ($x) = @_;
 
-      my $y = ( $coef * $x ) + $PointB[1] - ( $coef * $PointB[0] );
+      my $y = ( $coef * $x ) + $point_b[1] - ( $coef * $point_b[0] );
       return $y;
     };
 
@@ -264,196 +281,193 @@ sub _GetControlPoints {
 
     # xc1 = ( (xb - xa ) / 2 ) + xa
     # yc1 = via D2
-    my @ControlPoint1;
-    $ControlPoint1[0] = ( $distance * ( $PointB[0] - $PointA[0] ) ) + $PointA[0];
-    $ControlPoint1[1] = $D2line->( $ControlPoint1[0] );
-    push( @AllControlPoints, ( $ControlPoint1[0], $ControlPoint1[1] ) );
+    my @control_point1;
+    $control_point1[0] = ( $distance * ( $point_b[0] - $point_a[0] ) ) + $point_a[0];
+    $control_point1[1] = $d2line->( $control_point1[0] );
+    push @all_controlpoints, ( $control_point1[0], $control_point1[1] );
 
     # points
-    push( @AllControlPoints, ( $PointB[0], $PointB[1] ) );
+    push @all_controlpoints, ( $point_b[0], $point_b[1] );
 
     # xc2 = ( (xc - xb ) / 2 ) + xb
     # yc2 = via D2
-    my @ControlPoint2;
-    $ControlPoint2[0] = ( ( 1 - $distance ) * ( $PointC[0] - $PointB[0] ) ) + $PointB[0];
-    $ControlPoint2[1] = $D2line->( $ControlPoint2[0] );
+    my @control_point2;
+    $control_point2[0] = ( ( 1 - $distance ) * ( $point_c[0] - $point_b[0] ) ) + $point_b[0];
+    $control_point2[1] = $d2line->( $control_point2[0] );
 
-    push( @AllControlPoints, ( $ControlPoint2[0], $ControlPoint2[1] ) );
+    push @all_controlpoints, ( $control_point2[0], $control_point2[1] );
   }
 
-  push( @AllControlPoints, $RefArray->[ $NbrElt - 2 ], $RefArray->[ $NbrElt - 1 ] );
+  push @all_controlpoints, $ref_array->[ $nbrelt - 2 ], $ref_array->[ $nbrelt - 1 ];
 
-  return \@AllControlPoints;
+  return \@all_controlpoints;
 }
 
 sub redraw {
-  my ($CompositeWidget) = @_;
+  my ($cw) = @_;
 
-  $CompositeWidget->_ChartConstruction;
+  $cw->_chartconstruction;
   return;
 }
 
 sub delete_balloon {
-  my ($CompositeWidget) = @_;
+  my ($cw) = @_;
 
-  $CompositeWidget->{RefChart}->{Balloon}{State} = 0;
-  $CompositeWidget->_Balloon();
+  $cw->{RefChart}->{Balloon}{State} = 0;
+  $cw->_balloon();
 
   return;
 }
 
 sub add_data {
-  my ( $CompositeWidget, $Refdata, $legend ) = @_;
+  my ( $cw, $ref_data, $legend ) = @_;
 
   # Doesn't work for Pie graph
-  if ( $CompositeWidget->class eq 'Pie' ) {
-    $CompositeWidget->_error("This method 'add_data' not allowed for Tk::Chart::Pie\n");
+  if ( $cw->class eq 'Pie' ) {
+    $cw->_error("This method 'add_data' not allowed for Tk::Chart::Pie\n");
     return;
   }
 
-  push( @{ $CompositeWidget->{RefChart}->{Data}{RefAllData} }, $Refdata );
-  if ( $CompositeWidget->{RefChart}->{Legend}{NbrLegend} > 0 ) {
-    push @{ $CompositeWidget->{RefChart}->{Legend}{DataLegend} }, $legend;
+  push @{ $cw->{RefChart}->{Data}{RefAllData} }, $ref_data;
+  if ( $cw->{RefChart}->{Legend}{NbrLegend} > 0 ) {
+    push @{ $cw->{RefChart}->{Legend}{DataLegend} }, $legend;
   }
 
-  $CompositeWidget->plot( $CompositeWidget->{RefChart}->{Data}{RefAllData} );
+  $cw->plot( $cw->{RefChart}->{Data}{RefAllData} );
 
   return;
 }
 
 sub set_balloon {
-  my ( $CompositeWidget, %options ) = @_;
+  my ( $cw, %options ) = @_;
 
-  $CompositeWidget->{RefChart}->{Balloon}{State} = 1;
+  $cw->{RefChart}->{Balloon}{State} = 1;
 
   if ( defined $options{-colordatamouse} ) {
     if ( scalar @{ $options{-colordatamouse} } < 2 ) {
-      $CompositeWidget->_error(
-        "Can't set -colordatamouse, you have to set 2 colors\n" . "Ex : -colordatamouse => ['red','green'],",
-        1
-      );
+      $cw->_error(
+        "Can't set -colordatamouse, you have to set 2 colors\nEx : -colordatamouse => ['red','green'],", 1 );
     }
     else {
-      $CompositeWidget->{RefChart}->{Balloon}{ColorData} = $options{-colordatamouse};
+      $cw->{RefChart}->{Balloon}{ColorData} = $options{-colordatamouse};
     }
   }
   if ( defined $options{-morepixelselected} ) {
-    $CompositeWidget->{RefChart}->{Balloon}{MorePixelSelected} = $options{-morepixelselected};
+    $cw->{RefChart}->{Balloon}{MorePixelSelected} = $options{-morepixelselected};
   }
   if ( defined $options{-background} ) {
-    $CompositeWidget->{RefChart}->{Balloon}{Background} = $options{-background};
+    $cw->{RefChart}->{Balloon}{Background} = $options{-background};
   }
 
-  $CompositeWidget->_Balloon();
+  $cw->_balloon();
 
   return;
 }
 
 sub zoom {
-  my ( $CompositeWidget, $Zoom ) = @_;
+  my ( $cw, $zoom ) = @_;
 
-  my ( $NewWidth, $NewHeight ) = $CompositeWidget->_ZoomCalcul( $Zoom, $Zoom );
-  $CompositeWidget->configure( -width => $NewWidth, -height => $NewHeight );
-  $CompositeWidget->toplevel->geometry('');
+  my ( $new_width, $new_height ) = $cw->_zoomcalcul( $zoom, $zoom );
+  $cw->configure( -width => $new_width, -height => $new_height );
+  $cw->toplevel->geometry($EMPTY);
 
   return 1;
 }
 
 sub zoomx {
-  my ( $CompositeWidget, $Zoom ) = @_;
+  my ( $cw, $zoom ) = @_;
 
-  my ( $NewWidth, $NewHeight ) = $CompositeWidget->_ZoomCalcul( $Zoom, undef );
-  $CompositeWidget->configure( -width => $NewWidth );
-  $CompositeWidget->toplevel->geometry('');
+  my ( $new_width, $new_height ) = $cw->_zoomcalcul( $zoom, undef );
+  $cw->configure( -width => $new_width );
+  $cw->toplevel->geometry($EMPTY);
 
   return 1;
 }
 
 sub zoomy {
-  my ( $CompositeWidget, $Zoom ) = @_;
+  my ( $cw, $zoom ) = @_;
 
-  my ( $NewWidth, $NewHeight ) = $CompositeWidget->_ZoomCalcul( undef, $Zoom );
-  $CompositeWidget->configure( -height => $NewHeight );
-  $CompositeWidget->toplevel->geometry('');
+  my ( $new_width, $new_height ) = $cw->_zoomcalcul( undef, $zoom );
+  $cw->configure( -height => $new_height );
+  $cw->toplevel->geometry($EMPTY);
 
   return 1;
 }
 
 # Clear the Canvas Widget
 sub clearchart {
-  my ($CompositeWidget) = @_;
+  my ($cw) = @_;
 
-  $CompositeWidget->update;
-  $CompositeWidget->delete( $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart} );
+  $cw->update;
+  $cw->delete( $cw->{RefChart}->{TAGS}{AllTagsChart} );
 
   return;
 }
 
 sub display_values {
-  my ( $CompositeWidget, $ref_data, %options ) = @_;
+  my ( $cw, $ref_data, %options ) = @_;
 
   # Doesn't work for Pie graph
-  if ( $CompositeWidget->class eq 'Pie' ) {
-    $CompositeWidget->_error("This method 'display_values' not allowed for Tk::Chart::Pie\n");
+  if ( $cw->class eq 'Pie' ) {
+    $cw->_error("This method 'display_values' not allowed for Tk::Chart::Pie\n");
     return;
   }
-  elsif ( $CompositeWidget->class eq 'Bars' ) {
-    $CompositeWidget->_error("This method 'display_values' not allowed for Tk::Chart::Bars\n");
+  elsif ( $cw->class eq 'Bars' ) {
+    $cw->_error("This method 'display_values' not allowed for Tk::Chart::Bars\n");
     return;
   }
 
-  unless ( defined $ref_data and ref($ref_data) eq 'ARRAY' ) {
-    $CompositeWidget->_error( 'data not defined', 1 );
+  if ( !( defined $ref_data and ref $ref_data eq 'ARRAY' ) ) {
+    $cw->_error( 'data not defined', 1 );
     return;
   }
-  $CompositeWidget->{RefChart}->{Data}{RefDataToDisplay}       = $ref_data;
-  $CompositeWidget->{RefChart}->{Data}{RefOptionDataToDisplay} = \%options;
+  $cw->{RefChart}->{Data}{RefDataToDisplay}       = $ref_data;
+  $cw->{RefChart}->{Data}{RefOptionDataToDisplay} = \%options;
 
-  if ( $CompositeWidget->class eq 'Areas' ) {
+  if ( $cw->class eq 'Areas' ) {
     foreach my $ref_value ( @{$ref_data} ) {
       unshift @{$ref_value}, undef;
     }
   }
 
-  if ( defined $CompositeWidget->{RefChart}->{Data}{PlotDefined} ) {
-    $CompositeWidget->redraw;
+  if ( defined $cw->{RefChart}->{Data}{PlotDefined} ) {
+    $cw->redraw;
   }
 
   return;
 }
 
 sub enabled_automatic_redraw {
-  my ($CompositeWidget) = @_;
+  my ($cw) = @_;
 
-  my $class = $CompositeWidget->class;
+  my $class = $cw->class;
   foreach my $key (qw{ Down End Home Left Next Prior Right Up }) {
-    $CompositeWidget->Tk::bind( "Tk::Chart::$class", "<Key-$key>",         undef );
-    $CompositeWidget->Tk::bind( "Tk::Chart::$class", "<Control-Key-$key>", undef );
+    $cw->Tk::bind( "Tk::Chart::$class", "<Key-$key>",         undef );
+    $cw->Tk::bind( "Tk::Chart::$class", "<Control-Key-$key>", undef );
   }
 
   # recreate graph after widget resize
-  $CompositeWidget->Tk::bind( '<Configure>' => sub { $CompositeWidget->_ChartConstruction; } );
+  $cw->Tk::bind( '<Configure>' => sub { $cw->_chartconstruction; } );
   return;
 }
 
 sub disabled_automatic_redraw {
-  my ($CompositeWidget) = @_;
+  my ($cw) = @_;
 
-  my $class = $CompositeWidget->class;
+  my $class = $cw->class;
   foreach my $key (qw{ Down End Home Left Next Prior Right Up }) {
-    $CompositeWidget->Tk::bind( "Tk::Chart::$class", "<Key-$key>",         undef );
-    $CompositeWidget->Tk::bind( "Tk::Chart::$class", "<Control-Key-$key>", undef );
+    $cw->Tk::bind( "Tk::Chart::$class", "<Key-$key>",         undef );
+    $cw->Tk::bind( "Tk::Chart::$class", "<Control-Key-$key>", undef );
   }
 
   # recreate graph after widget resize
-  $CompositeWidget->Tk::bind( '<Configure>' => undef );
+  $cw->Tk::bind( '<Configure>' => undef );
   return;
 }
 
 1;
 
 __END__
-
 =head1 NAME
 
 Tk::Chart::Utils - Private Tk::Chart methods
@@ -471,9 +485,12 @@ none
 Djibril Ousmanou, C<< <djibel at cpan.org> >>
 
 
+=head1 ACKNOWLEDGEMENTS
+
+
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2010 Djibril Ousmanou, all rights reserved.
+Copyright 2011 Djibril Ousmanou, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

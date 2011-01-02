@@ -4,12 +4,12 @@ use warnings;
 use Tk;
 use Tk::Chart::Lines;
 
-my $mw = new MainWindow(
+my $mw = MainWindow->new(
   -title      => 'Tk::Chart::Lines',
   -background => 'white',
 );
 
-my $Chart = $mw->Lines(
+my $chart = $mw->Lines(
   -background   => 'snow',
   -title        => 'Tk::Chart::Lines example - negative values',
   -xlabel       => 'X Label',
@@ -24,5 +24,5 @@ my @data = (
 );
 
 # Create the graph
-$Chart->plot( \@data );
+$chart->plot( \@data );
 MainLoop();

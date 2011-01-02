@@ -1,5 +1,8 @@
 Revision history for Tk-Chart
 
+1.16  01/01/2011 00:00:00
+      POD documentation and code have been updated.      
+        
 1.15  24/10/2010 14:21:11
       POD documentation updated.
       Tk::Chart::FAQ updated.

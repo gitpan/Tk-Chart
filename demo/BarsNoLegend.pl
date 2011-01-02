@@ -4,12 +4,12 @@ use warnings;
 use Tk;
 use Tk::Chart::Bars;
 
-my $mw = new MainWindow(
+my $mw = MainWindow->new(
   -title      => 'Tk::Chart::Bars No legend',
   -background => 'white',
 );
 
-my $Chart = $mw->Bars(
+my $chart = $mw->Bars(
   -title      => 'Tk::Chart::Bars - no legend',
   -xlabel     => 'X Label',
   -background => 'snow',
@@ -23,5 +23,5 @@ my @data = (
 );
 
 # Create the graph
-$Chart->plot( \@data );
+$chart->plot( \@data );
 MainLoop();

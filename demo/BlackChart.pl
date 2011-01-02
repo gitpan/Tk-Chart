@@ -2,14 +2,15 @@
 use strict;
 use warnings;
 use Tk;
+
 use Tk::Chart::Boxplots;
 
-my $mw = new MainWindow(
+my $mw = MainWindow->new(
   -title      => 'Tk::Chart::Boxplots',
   -background => 'white',
 );
 
-my $Chart = $mw->Boxplots(
+my $chart = $mw->Boxplots(
   -title             => 'Tk::Chart::Boxplots module',
   -interval          => 1,
   -background        => 'black',
@@ -37,28 +38,28 @@ my @data = (
 );
 
 # Add a legend to the graph
-my @Legends = ( 'data 1', 'data 2' );
-$Chart->set_legend(
+my @legends = ( 'data 1', 'data 2' );
+$chart->set_legend(
   -title       => 'My boxplots data',
-  -data        => \@Legends,
+  -data        => \@legends,
   -titlecolors => 'white',
   -legendcolor => 'white',
   -box         => 1,
 );
 
 # Add help identification
-$Chart->set_balloon();
+$chart->set_balloon();
 
 # Create the graph
-$Chart->plot( \@data );
+$chart->plot( \@data );
 
 my $one     = [ 210 .. 275 ];
 my $two     = [ 180, 190, 200, 220, 235, 245 ];
 my $three   = [ 40, 140 .. 150, 160 .. 180, 250 ];
 my $four    = [ 100 .. 125, 136 .. 140 ];
 my $five    = [ 10 .. 50, 100, 180 ];
-my @NewData = ( $one, $two, $three, $four, $five );
+my @new_data = ( $one, $two, $three, $four, $five );
 
-$Chart->add_data( \@NewData, 'data 3' );
+$chart->add_data( \@new_data, 'data 3' );
 
 MainLoop();

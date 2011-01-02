@@ -5,14 +5,14 @@ use strict;
 use Carp;
 
 #==================================================================
-# Author    : Djibril Ousmanou
-# Copyright : 2010
-# Update    : 24/10/2010 12:46:03
-# AIM       : Create pie graph
+# $Author    : Djibril Ousmanou                                   $
+# $Copyright : 2011                                               $
+# $Update    : 01/01/2011 00:00:00                                $
+# $AIM       : Create pie graph                                   $
 #==================================================================
 
 use vars qw($VERSION);
-$VERSION = '1.02';
+$VERSION = '1.03';
 
 use base qw/ Tk::Derived Tk::Canvas::GradientColor /;
 use Tk::Balloon;
@@ -24,34 +24,34 @@ Construct Tk::Widget 'Pie';
 
 sub Populate {
 
-  my ( $CompositeWidget, $RefParameters ) = @_;
+  my ( $cw, $ref_parameters ) = @_;
 
   # Get initial parameters
-  $CompositeWidget->{RefChart} = $CompositeWidget->_InitConfig();
+  $cw->{RefChart} = $cw->_initconfig();
 
-  $CompositeWidget->SUPER::Populate($RefParameters);
+  $cw->SUPER::Populate($ref_parameters);
 
-  $CompositeWidget->Advertise( 'GradientColor' => $CompositeWidget );
-  $CompositeWidget->Advertise( 'canvas'        => $CompositeWidget->SUPER::Canvas );
-  $CompositeWidget->Advertise( 'Canvas'        => $CompositeWidget->SUPER::Canvas );
+  $cw->Advertise( 'GradientColor' => $cw );
+  $cw->Advertise( 'canvas'        => $cw->SUPER::Canvas );
+  $cw->Advertise( 'Canvas'        => $cw->SUPER::Canvas );
 
   # remove highlightthickness if necessary
-  unless ( exists $RefParameters->{-highlightthickness} ) {
-    $CompositeWidget->configure( -highlightthickness => 0 );
+  if ( !exists $ref_parameters->{-highlightthickness} ) {
+    $cw->configure( -highlightthickness => 0 );
   }
 
   # ConfigSpecs
-  $CompositeWidget->ConfigSpecs(
-    -title      => [ 'PASSIVE', 'Title',      'Title',      undef ],
-    -titlecolor => [ 'PASSIVE', 'Titlecolor', 'TitleColor', 'black' ],
-    -titlefont => [ 'PASSIVE', 'Titlefont', 'TitleFont', $CompositeWidget->{RefChart}->{Font}{DefaultTitle} ],
+  $cw->ConfigSpecs(
+    -title         => [ 'PASSIVE', 'Title',         'Title',         undef ],
+    -titlecolor    => [ 'PASSIVE', 'Titlecolor',    'TitleColor',    'black' ],
+    -titlefont     => [ 'PASSIVE', 'Titlefont',     'TitleFont',     $cw->{RefChart}->{Font}{DefaultTitle} ],
     -titleposition => [ 'PASSIVE', 'Titleposition', 'TitlePosition', 'center' ],
-    -width  => [ 'SELF', 'width',  'Width',  $CompositeWidget->{RefChart}->{Canvas}{Width} ],
-    -height => [ 'SELF', 'height', 'Height', $CompositeWidget->{RefChart}->{Canvas}{Height} ],
+    -width         => [ 'SELF',    'width',         'Width',         $cw->{RefChart}->{Canvas}{Width} ],
+    -height        => [ 'SELF',    'height',        'Height',        $cw->{RefChart}->{Canvas}{Height} ],
 
     -linewidth  => [ 'PASSIVE', 'Linewidth',  'LineWidth',  2 ],
     -startangle => [ 'PASSIVE', 'Startangle', 'StartAngle', 0 ],
-    -colordata  => [ 'PASSIVE', 'Colordata',  'ColorData',  $CompositeWidget->{RefChart}->{Legend}{Colors} ],
+    -colordata  => [ 'PASSIVE', 'Colordata',  'ColorData',  $cw->{RefChart}->{Legend}{Colors} ],
 
     -legendcolor => [ 'PASSIVE', 'Legendcolor', 'LegendColor', 'black' ],
     -legendfont  => [ 'PASSIVE', 'Legendfont',  'LegendFont',  '{Times} 8 {normal}' ],
@@ -61,262 +61,252 @@ sub Populate {
     -verbose => [ 'PASSIVE', 'verbose', 'Verbose', 1 ],
   );
 
-  $CompositeWidget->Delegates( DEFAULT => $CompositeWidget, );
+  $cw->Delegates( DEFAULT => $cw, );
 
   # recreate graph after widget resize
-  $CompositeWidget->enabled_automatic_redraw();
-  $CompositeWidget->disabled_gradientcolor();
+  $cw->enabled_automatic_redraw();
+  $cw->disabled_gradientcolor();
 }
 
 sub plot {
-  my ( $CompositeWidget, $RefData ) = @_;
+  my ( $cw, $ref_data ) = @_;
 
-  unless ( defined $RefData ) {
-    $CompositeWidget->_error('data not defined');
+  if ( not defined $ref_data ) {
+    $cw->_error('data not defined');
     return;
   }
 
-  unless ( scalar @{$RefData} == 2 ) {
-    $CompositeWidget->_error('You must have 2 arrays in data array');
+  if ( scalar @{$ref_data} != 2 ) {
+    $cw->_error('You must have 2 arrays in data array');
     return;
   }
 
   # Check array size
-  $CompositeWidget->{RefChart}->{Data}{NumberXValues} = scalar @{ $RefData->[0] };
-  foreach my $RefArray ( @{$RefData} ) {
-    unless ( scalar @{$RefArray} == $CompositeWidget->{RefChart}->{Data}{NumberXValues} ) {
-      $CompositeWidget->_error( 'Make sure that every array has the same size in plot data method', 1 );
+  $cw->{RefChart}->{Data}{NumberXValues} = scalar @{ $ref_data->[0] };
+  foreach my $ref_array ( @{$ref_data} ) {
+    if ( scalar @{$ref_array} != $cw->{RefChart}->{Data}{NumberXValues} ) {
+      $cw->_error( 'Make sure that every array has the same size in plot data method', 1 );
       return;
     }
   }
 
   # Check array size
-  foreach my $data ( @{ $RefData->[1] } ) {
-    if ( defined $data and !_isANumber($data) ) {
-      $data = $CompositeWidget->{RefChart}->{Data}{SubstitutionValue};
+  foreach my $data ( @{ $ref_data->[1] } ) {
+    if ( defined $data and !_isanumber($data) ) {
+      $data = $cw->{RefChart}->{Data}{SubstitutionValue};
     }
   }
 
-  $CompositeWidget->{RefChart}->{Data}{MaxValue}    = _MaxArray( $RefData->[1] );
-  $CompositeWidget->{RefChart}->{Data}{NbrSlice}    = scalar @{ $RefData->[0] };
-  $CompositeWidget->{RefChart}->{Data}{RefAllData}  = $RefData;
-  $CompositeWidget->{RefChart}->{Data}{PlotDefined} = 1;
+  $cw->{RefChart}->{Data}{MaxValue}    = _maxarray( $ref_data->[1] );
+  $cw->{RefChart}->{Data}{NbrSlice}    = scalar @{ $ref_data->[0] };
+  $cw->{RefChart}->{Data}{RefAllData}  = $ref_data;
+  $cw->{RefChart}->{Data}{PlotDefined} = 1;
 
-  $CompositeWidget->_ChartConstruction;
+  $cw->_chartconstruction;
 
   return;
 }
 
 sub _titlepie {
-  my ($CompositeWidget) = @_;
+  my ($cw) = @_;
 
-  my $Title         = $CompositeWidget->cget( -title );
-  my $TitleColor    = $CompositeWidget->cget( -titlecolor );
-  my $TitleFont     = $CompositeWidget->cget( -titlefont );
-  my $titleposition = $CompositeWidget->cget( -titleposition );
+  my $title         = $cw->cget( -title );
+  my $titlecolor    = $cw->cget( -titlecolor );
+  my $titlefont     = $cw->cget( -titlefont );
+  my $titleposition = $cw->cget( -titleposition );
 
   # Title verification
-  unless ($Title) {
-    $CompositeWidget->{RefChart}->{Title}{Height} = 0;
+  if ( !$title ) {
+    $cw->{RefChart}->{Title}{Height} = 0;
     return;
   }
 
   # Space before the title
-  my $WidthEmptyBeforeTitle = $CompositeWidget->{RefChart}->{Canvas}{WidthEmptySpace};
+  my $width_empty_before_title = $cw->{RefChart}->{Canvas}{WidthEmptySpace};
 
   # Coordinates title
-  $CompositeWidget->{RefChart}->{Title}{Ctitrex} = $CompositeWidget->{RefChart}->{Canvas}{WidthEmptySpace}
-    + ( $CompositeWidget->{RefChart}->{Pie}{Width} / 2 );
-  $CompositeWidget->{RefChart}->{Title}{Ctitrey} = $CompositeWidget->{RefChart}->{Canvas}{HeightEmptySpace}
-    + ( $CompositeWidget->{RefChart}->{Title}{Height} / 2 );
+  $cw->{RefChart}->{Title}{Ctitrex}
+    = $cw->{RefChart}->{Canvas}{WidthEmptySpace} + ( $cw->{RefChart}->{Pie}{Width} / 2 );
+  $cw->{RefChart}->{Title}{Ctitrey}
+    = $cw->{RefChart}->{Canvas}{HeightEmptySpace} + ( $cw->{RefChart}->{Title}{Height} / 2 );
 
   # display title
   my $anchor;
   if ( $titleposition eq 'left' ) {
-    $CompositeWidget->{RefChart}->{Title}{Ctitrex}  = $WidthEmptyBeforeTitle;
-    $anchor                                         = 'nw';
-    $CompositeWidget->{RefChart}->{Title}{'-width'} = 0;
+    $cw->{RefChart}->{Title}{Ctitrex}  = $width_empty_before_title;
+    $anchor                            = 'nw';
+    $cw->{RefChart}->{Title}{'-width'} = 0;
   }
   elsif ( $titleposition eq 'right' ) {
-    $CompositeWidget->{RefChart}->{Title}{Ctitrex}
-      = $WidthEmptyBeforeTitle + $CompositeWidget->{RefChart}->{Axis}{Xaxis}{Width};
-    $CompositeWidget->{RefChart}->{Title}{'-width'} = 0;
-    $anchor = 'ne';
+    $cw->{RefChart}->{Title}{Ctitrex}  = $width_empty_before_title + $cw->{RefChart}->{Axis}{Xaxis}{Width};
+    $cw->{RefChart}->{Title}{'-width'} = 0;
+    $anchor                            = 'ne';
   }
   else {
     $anchor = 'center';
   }
-  $CompositeWidget->{RefChart}->{Title}{IdTitre} = $CompositeWidget->createText(
-    $CompositeWidget->{RefChart}->{Title}{Ctitrex},
-    $CompositeWidget->{RefChart}->{Title}{Ctitrey},
-    -text   => $Title,
-    -width  => $CompositeWidget->{RefChart}->{Pie}{Width},
+  $cw->{RefChart}->{Title}{IdTitre} = $cw->createText(
+    $cw->{RefChart}->{Title}{Ctitrex},
+    $cw->{RefChart}->{Title}{Ctitrey},
+    -text   => $title,
+    -width  => $cw->{RefChart}->{Pie}{Width},
     -anchor => $anchor,
-    -tags   => [ $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart}, ],
+    -tags   => [ $cw->{RefChart}->{TAGS}{AllTagsChart}, ],
   );
   return if ( $anchor =~ m{^left|right$} );
 
   # get title information
-  my ($Height);
-  ( $CompositeWidget->{RefChart}->{Title}{Ctitrex},
-    $CompositeWidget->{RefChart}->{Title}{Ctitrey},
-    $CompositeWidget->{RefChart}->{Title}{Width}, $Height
-  ) = $CompositeWidget->bbox( $CompositeWidget->{RefChart}->{Title}{IdTitre} );
+  my ($height);
+  ( $cw->{RefChart}->{Title}{Ctitrex},
+    $cw->{RefChart}->{Title}{Ctitrey},
+    $cw->{RefChart}->{Title}{Width}, $height
+  ) = $cw->bbox( $cw->{RefChart}->{Title}{IdTitre} );
 
   # Title too long
-  if ( $CompositeWidget->{RefChart}->{Title}{Ctitrey}
-    < $CompositeWidget->{RefChart}->{Canvas}{HeightEmptySpace} )
-  {
+  if ( $cw->{RefChart}->{Title}{Ctitrey} < $cw->{RefChart}->{Canvas}{HeightEmptySpace} ) {
 
     # delete title
-    $CompositeWidget->delete( $CompositeWidget->{RefChart}->{Title}{IdTitre} );
+    $cw->delete( $cw->{RefChart}->{Title}{IdTitre} );
 
-    $CompositeWidget->{RefChart}->{Title}{Ctitrex} = $WidthEmptyBeforeTitle;
-    $CompositeWidget->{RefChart}->{Title}{Ctitrey} = $CompositeWidget->{RefChart}->{Canvas}{HeightEmptySpace}
-      + ( $CompositeWidget->{RefChart}->{Title}{Height} / 2 );
+    $cw->{RefChart}->{Title}{Ctitrex} = $width_empty_before_title;
+    $cw->{RefChart}->{Title}{Ctitrey}
+      = $cw->{RefChart}->{Canvas}{HeightEmptySpace} + ( $cw->{RefChart}->{Title}{Height} / 2 );
 
     # cut title
-    $CompositeWidget->{RefChart}->{Title}{'-width'} = 0;
+    $cw->{RefChart}->{Title}{'-width'} = 0;
 
     # display title
-    $CompositeWidget->{RefChart}->{Title}{IdTitre} = $CompositeWidget->createText(
-      $CompositeWidget->{RefChart}->{Title}{Ctitrex},
-      $CompositeWidget->{RefChart}->{Title}{Ctitrey},
-      -text   => $Title,
-      -width  => $CompositeWidget->{RefChart}->{Title}{'-width'},
+    $cw->{RefChart}->{Title}{IdTitre} = $cw->createText(
+      $cw->{RefChart}->{Title}{Ctitrex},
+      $cw->{RefChart}->{Title}{Ctitrey},
+      -text   => $title,
+      -width  => $cw->{RefChart}->{Title}{'-width'},
       -anchor => 'nw',
-      -tags   => [ $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart}, ],
+      -tags   => [ $cw->{RefChart}->{TAGS}{AllTagsChart}, ],
     );
   }
 
-  $CompositeWidget->itemconfigure(
-    $CompositeWidget->{RefChart}->{Title}{IdTitre},
-    -font => $TitleFont,
-    -fill => $TitleColor,
+  $cw->itemconfigure(
+    $cw->{RefChart}->{Title}{IdTitre},
+    -font => $titlefont,
+    -fill => $titlecolor,
   );
 
   return;
 }
 
-sub _ViewData {
-  my ($CompositeWidget) = @_;
+sub _viewdata {
+  my ($cw) = @_;
 
-  my $legendmarkercolors = $CompositeWidget->cget( -colordata );
+  my $legendmarkercolors = $cw->cget( -colordata );
 
   # Height legend
-  $CompositeWidget->_Legend();
+  $cw->_legend();
 
   # Coordinates for rectangle pie
-  $CompositeWidget->{RefChart}->{Pie}{x1} = $CompositeWidget->{RefChart}->{Canvas}{WidthEmptySpace};
-  $CompositeWidget->{RefChart}->{Pie}{y1}
-    = $CompositeWidget->{RefChart}->{Canvas}{HeightEmptySpace} 
-    + $CompositeWidget->{RefChart}->{Title}{Height}
-    + $CompositeWidget->{RefChart}->{Canvas}{HeightEmptySpace};
+  $cw->{RefChart}->{Pie}{x1} = $cw->{RefChart}->{Canvas}{WidthEmptySpace};
+  $cw->{RefChart}->{Pie}{y1}
+    = $cw->{RefChart}->{Canvas}{HeightEmptySpace} 
+    + $cw->{RefChart}->{Title}{Height}
+    + $cw->{RefChart}->{Canvas}{HeightEmptySpace};
 
-  $CompositeWidget->{RefChart}->{Pie}{x2}
-    = $CompositeWidget->{RefChart}->{Pie}{x1} + $CompositeWidget->{RefChart}->{Pie}{Width};
+  $cw->{RefChart}->{Pie}{x2} = $cw->{RefChart}->{Pie}{x1} + $cw->{RefChart}->{Pie}{Width};
 
-  $CompositeWidget->{RefChart}->{Pie}{y2}
-    = $CompositeWidget->{RefChart}->{Canvas}{Height}
-    - ( 2 * $CompositeWidget->{RefChart}->{Canvas}{WidthEmptySpace} )
-    - $CompositeWidget->{RefChart}->{Legend}{Height};
+  $cw->{RefChart}->{Pie}{y2}
+    = $cw->{RefChart}->{Canvas}{Height} 
+    - ( 2 * $cw->{RefChart}->{Canvas}{WidthEmptySpace} )
+    - $cw->{RefChart}->{Legend}{Height};
 
   # Calculate the number of degrees for value = 1
-  my $Somme = 0;
-  foreach my $data ( @{ $CompositeWidget->{RefChart}->{Data}{RefAllData}->[1] } ) {
-    $Somme += $data;
+  my $somme = 0;
+  foreach my $data ( @{ $cw->{RefChart}->{Data}{RefAllData}->[1] } ) {
+    $somme += $data;
   }
-  $CompositeWidget->{RefChart}->{Pie}{DegreeOneValue} = 360 / $Somme;
+  $cw->{RefChart}->{Pie}{DegreeOneValue} = 360 / $somme;
 
   # pie
-  my ( $degrees, $start ) = ( 0, $CompositeWidget->cget( -startangle ) );
-  my $IndiceColor = 0;
-  my $IndexLegend = 0;
-  for my $Indice ( 0 .. $CompositeWidget->{RefChart}->{Data}{NbrSlice} - 1 ) {
-    my $Value = $CompositeWidget->{RefChart}->{Data}{RefAllData}->[1]->[$Indice];
-    $degrees = $CompositeWidget->{RefChart}->{Pie}{DegreeOneValue} * $Value;
+  my ( $degrees, $start ) = ( 0, $cw->cget( -startangle ) );
+  my $indice_color = 0;
+  my $index_legend = 0;
+  for my $indice ( 0 .. $cw->{RefChart}->{Data}{NbrSlice} - 1 ) {
+    my $value = $cw->{RefChart}->{Data}{RefAllData}->[1]->[$indice];
+    $degrees = $cw->{RefChart}->{Pie}{DegreeOneValue} * $value;
 
-    my $Color = $legendmarkercolors->[$IndiceColor];
-    unless ( defined $Color ) {
-      $IndiceColor = 0;
-      $Color       = $legendmarkercolors->[$IndiceColor];
+    my $color = $legendmarkercolors->[$indice_color];
+    if ( not defined $color ) {
+      $indice_color = 0;
+      $color        = $legendmarkercolors->[$indice_color];
     }
-    my $tag
-      = $IndexLegend
-      . $CompositeWidget->{RefChart}->{TAGS}{Legend}
-      . $CompositeWidget->{RefChart}->{TAGS}{Pie};
-    $CompositeWidget->createArc(
-      $CompositeWidget->{RefChart}->{Pie}{x1},
-      $CompositeWidget->{RefChart}->{Pie}{y1},
-      $CompositeWidget->{RefChart}->{Pie}{x2},
-      $CompositeWidget->{RefChart}->{Pie}{y2},
+    my $tag = $index_legend . $cw->{RefChart}->{TAGS}{Legend} . $cw->{RefChart}->{TAGS}{Pie};
+    $cw->createArc(
+      $cw->{RefChart}->{Pie}{x1},
+      $cw->{RefChart}->{Pie}{y1},
+      $cw->{RefChart}->{Pie}{x2},
+      $cw->{RefChart}->{Pie}{y2},
       -extent => $degrees,
-      -fill   => $Color,
+      -fill   => $color,
       -start  => $start,
-      -tags   => [ $tag, $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart}, ],
-      -width  => $CompositeWidget->cget( -linewidth ),
+      -tags   => [ $tag, $cw->{RefChart}->{TAGS}{AllTagsChart}, ],
+      -width  => $cw->cget( -linewidth ),
     );
 
-    $CompositeWidget->{RefChart}{Pie}{$tag}{color} = $Color;
-    $CompositeWidget->{RefChart}{Pie}{$tag}{percent}
-      = "$Value (" . _roundValue( ( $Value * 100 ) / $Somme ) . '%)';
+    $cw->{RefChart}{Pie}{$tag}{color} = $color;
+    $cw->{RefChart}{Pie}{$tag}{percent} = "$value (" . _roundvalue( ( $value * 100 ) / $somme ) . '%)';
 
     $start += $degrees;
-    $IndiceColor++;
-    $IndexLegend++;
-
+    $indice_color++;
+    $index_legend++;
   }
 
   return 1;
 }
 
-sub _CheckHeightPie {
-  my ($CompositeWidget) = @_;
+sub _checkheightpie {
+  my ($cw) = @_;
 
   my $total
-    = $CompositeWidget->{RefChart}->{Canvas}{HeightEmptySpace} 
-    + $CompositeWidget->{RefChart}->{Title}{Height}
-    + ( 2 * $CompositeWidget->{RefChart}->{Canvas}{HeightEmptySpace} )
-    + $CompositeWidget->{RefChart}->{Legend}{Height}
-    + $CompositeWidget->{RefChart}->{Title}{Height};
-  while ( $total > $CompositeWidget->{RefChart}->{Canvas}{Height} ) {
-    $CompositeWidget->{RefChart}->{Canvas}{Height} += $CompositeWidget->{RefChart}->{Legend}{Height};
+    = ( $cw->{RefChart}->{Canvas}{HeightEmptySpace} 
+      + $cw->{RefChart}->{Title}{Height}
+      + ( 2 * $cw->{RefChart}->{Canvas}{HeightEmptySpace} )
+      + $cw->{RefChart}->{Legend}{Height}
+      + $cw->{RefChart}->{Title}{Height} );
+  while ( $total > $cw->{RefChart}->{Canvas}{Height} ) {
+    $cw->{RefChart}->{Canvas}{Height} += $cw->{RefChart}->{Legend}{Height};
 
-    $CompositeWidget->configure( -height => $CompositeWidget->{RefChart}->{Canvas}{Height} );
+    $cw->configure( -height => $cw->{RefChart}->{Canvas}{Height} );
   }
 
   return;
 }
 
-sub _Legend {
-  my ($CompositeWidget) = @_;
+sub _legend {
+  my ($cw) = @_;
 
-  my $setlegend = $CompositeWidget->cget( -setlegend );
-  unless ( defined $setlegend and $setlegend == 1 ) {
+  my $setlegend = $cw->cget( -setlegend );
+  if ( !( defined $setlegend and $setlegend == 1 ) ) {
     return;
   }
 
 SETLEGEND:
 
   # One legend width
-  $CompositeWidget->{RefChart}->{Legend}{LengthOneLegend}
-    = +$CompositeWidget->{RefChart}->{Legend}{SpaceBeforeCube}    # Espace entre chaque légende
-    + $CompositeWidget->{RefChart}->{Legend}{WCube}               # Cube (largeur)
-    + $CompositeWidget->{RefChart}->{Legend}{SpaceAfterCube}      # Espace apres cube
-    + $CompositeWidget->{RefChart}->{Legend}{WidthText}           # longueur du texte de la légende
+  $cw->{RefChart}->{Legend}{LengthOneLegend}
+    = +$cw->{RefChart}->{Legend}{SpaceBeforeCube}    # Espace entre chaque légende
+    + $cw->{RefChart}->{Legend}{WCube}               # Cube (largeur)
+    + $cw->{RefChart}->{Legend}{SpaceAfterCube}      # Espace apres cube
+    + $cw->{RefChart}->{Legend}{WidthText}           # longueur du texte de la légende
     ;
 
   # Number of legends per line
-  $CompositeWidget->{RefChart}->{Legend}{NbrPerLine} = int(
-    $CompositeWidget->{RefChart}->{Pie}{Width} / $CompositeWidget->{RefChart}->{Legend}{LengthOneLegend} );
+  $cw->{RefChart}->{Legend}{NbrPerLine}
+    = int( $cw->{RefChart}->{Pie}{Width} / $cw->{RefChart}->{Legend}{LengthOneLegend} );
 
-  if ( $CompositeWidget->{RefChart}->{Legend}{NbrPerLine} == 0 ) {
-    $CompositeWidget->{RefChart}->{Legend}{NbrPerLine} = 1;
+  if ( $cw->{RefChart}->{Legend}{NbrPerLine} == 0 ) {
+    $cw->{RefChart}->{Legend}{NbrPerLine} = 1;
   }
 
   # Number of legends (total)
-  $CompositeWidget->{RefChart}->{Legend}{NbrLegend}
-    = scalar @{ $CompositeWidget->{RefChart}->{Data}{RefAllData}->[0] };
+  $cw->{RefChart}->{Legend}{NbrLegend} = scalar @{ $cw->{RefChart}->{Data}{RefAllData}->[0] };
 
 =for NumberLines:
   We calculate the number of lines set for the legend graph.
@@ -327,186 +317,172 @@ SETLEGEND:
 
 =cut
 
-  $CompositeWidget->{RefChart}->{Legend}{NbrLine}
-    = $CompositeWidget->{RefChart}->{Legend}{NbrLegend} / $CompositeWidget->{RefChart}->{Legend}{NbrPerLine};
+  $cw->{RefChart}->{Legend}{NbrLine}
+    = $cw->{RefChart}->{Legend}{NbrLegend} / $cw->{RefChart}->{Legend}{NbrPerLine};
 
-  unless (
-    int( $CompositeWidget->{RefChart}->{Legend}{NbrLine} )
-    == $CompositeWidget->{RefChart}->{Legend}{NbrLine} )
-  {
-    $CompositeWidget->{RefChart}->{Legend}{NbrLine}
-      = int( $CompositeWidget->{RefChart}->{Legend}{NbrLine} ) + 1;
+  if ( int( $cw->{RefChart}->{Legend}{NbrLine} ) != $cw->{RefChart}->{Legend}{NbrLine} ) {
+    $cw->{RefChart}->{Legend}{NbrLine} = int( $cw->{RefChart}->{Legend}{NbrLine} ) + 1;
   }
 
   # Total Height of Legend
-  $CompositeWidget->{RefChart}->{Legend}{Height}
-    = $CompositeWidget->{RefChart}->{Legend}{NbrLine} * $CompositeWidget->{RefChart}->{Legend}{HLine};
+  $cw->{RefChart}->{Legend}{Height} = $cw->{RefChart}->{Legend}{NbrLine} * $cw->{RefChart}->{Legend}{HLine};
 
   # Get number legend text max per line to reajust our graph
-  $CompositeWidget->{RefChart}->{Legend}{CurrentNbrPerLine}
-    = $CompositeWidget->{RefChart}->{Legend}{NbrPerLine};
-  if (
-    $CompositeWidget->{RefChart}->{Legend}{NbrLegend} < $CompositeWidget->{RefChart}->{Legend}{NbrPerLine} )
-  {
-    $CompositeWidget->{RefChart}->{Legend}{CurrentNbrPerLine}
-      = $CompositeWidget->{RefChart}->{Legend}{NbrLegend};
+  $cw->{RefChart}->{Legend}{CurrentNbrPerLine} = $cw->{RefChart}->{Legend}{NbrPerLine};
+  if ( $cw->{RefChart}->{Legend}{NbrLegend} < $cw->{RefChart}->{Legend}{NbrPerLine} ) {
+    $cw->{RefChart}->{Legend}{CurrentNbrPerLine} = $cw->{RefChart}->{Legend}{NbrLegend};
 
   }
 
   # Get the biggest length of legend text
-  my @LengthLegend = map { length; } @{ $CompositeWidget->{RefChart}->{Data}{RefAllData}->[0] };
-  my $BiggestLegend = _MaxArray( \@LengthLegend );
+  my @length_legend = map { length; } @{ $cw->{RefChart}->{Data}{RefAllData}->[0] };
+  my $biggest_legend = _maxarray( \@length_legend );
 
   # 100 pixel =>  13 characters, 1 pixel =>  0.13 pixels then 1 character = 7.69 pixels
-  $CompositeWidget->{RefChart}->{Legend}{WidthOneCaracter} = 7.69;
+  $cw->{RefChart}->{Legend}{WidthOneCaracter} = 7.69;
 
   # Max pixel width for a legend text for us
-  $CompositeWidget->{RefChart}->{Legend}{LengthTextMax}
-    = int( $CompositeWidget->{RefChart}->{Legend}{WidthText}
-      / $CompositeWidget->{RefChart}->{Legend}{WidthOneCaracter} );
+  $cw->{RefChart}->{Legend}{LengthTextMax}
+    = int( $cw->{RefChart}->{Legend}{WidthText} / $cw->{RefChart}->{Legend}{WidthOneCaracter} );
 
   # We have free space
-  my $Diff = $CompositeWidget->{RefChart}->{Legend}{LengthTextMax} - $BiggestLegend;
+  my $diff = $cw->{RefChart}->{Legend}{LengthTextMax} - $biggest_legend;
 
   # Get new size width for a legend text with one pixel security
-  if ( $Diff > 1 ) {
-    $CompositeWidget->{RefChart}->{Legend}{WidthText}
-      -= ( $Diff - 1 ) * $CompositeWidget->{RefChart}->{Legend}{WidthOneCaracter};
+  if ( $diff > 1 ) {
+    $cw->{RefChart}->{Legend}{WidthText} -= ( $diff - 1 ) * $cw->{RefChart}->{Legend}{WidthOneCaracter};
     goto SETLEGEND;
   }
 
-  $CompositeWidget->_CheckHeightPie();
+  $cw->_checkheightpie();
 
   return;
 }
 
-sub _ViewLegend {
-  my ($CompositeWidget) = @_;
+sub _viewlegend {
+  my ($cw) = @_;
 
-  my $legendmarkercolors = $CompositeWidget->cget( -colordata );
-  my $legendcolor        = $CompositeWidget->cget( -legendcolor );
-  my $legendfont         = $CompositeWidget->cget( -legendfont );
-  my $setlegend          = $CompositeWidget->cget( -setlegend );
-  unless ( defined $setlegend and $setlegend == 1 ) {
+  my $legendmarkercolors = $cw->cget( -colordata );
+  my $legendcolor        = $cw->cget( -legendcolor );
+  my $legendfont         = $cw->cget( -legendfont );
+  my $setlegend          = $cw->cget( -setlegend );
+  if ( !( defined $setlegend and $setlegend == 1 ) ) {
     return;
   }
 
-  my $IndexColor  = 0;
-  my $IndexLegend = 0;
+  my $index_color  = 0;
+  my $index_legend = 0;
 
   # Balloon
-  my %MsgBalloon;
+  my %msgballoon;
 
-  for my $NumberLine ( 0 .. $CompositeWidget->{RefChart}->{Legend}{NbrLine} ) {
-    my $x1Cube = $CompositeWidget->{RefChart}->{Canvas}{WidthEmptySpace}
-      + $CompositeWidget->{RefChart}->{Legend}{SpaceBeforeCube};
+  for my $number_line ( 0 .. $cw->{RefChart}->{Legend}{NbrLine} ) {
+    my $x1_cube = $cw->{RefChart}->{Canvas}{WidthEmptySpace} + $cw->{RefChart}->{Legend}{SpaceBeforeCube};
 
-    my $y1Cube
-      = $CompositeWidget->{RefChart}->{Pie}{y2} 
-      + $CompositeWidget->{RefChart}->{Canvas}{HeightEmptySpace}
-      + ( $NumberLine * $CompositeWidget->{RefChart}->{Legend}{HLine} );
+    my $y1_cube
+      = $cw->{RefChart}->{Pie}{y2} 
+      + $cw->{RefChart}->{Canvas}{HeightEmptySpace}
+      + ( $number_line * $cw->{RefChart}->{Legend}{HLine} );
 
-    my $x2Cube    = $x1Cube + $CompositeWidget->{RefChart}->{Legend}{WCube};
-    my $y2Cube    = $y1Cube - $CompositeWidget->{RefChart}->{Legend}{HCube};
-    my $xText     = $x2Cube + $CompositeWidget->{RefChart}->{Legend}{SpaceAfterCube};
-    my $yText     = $y2Cube;
-    my $MaxLength = $CompositeWidget->{RefChart}->{Legend}{LengthTextMax};
+    my $x2_cube    = $x1_cube + $cw->{RefChart}->{Legend}{WCube};
+    my $y2_cube    = $y1_cube - $cw->{RefChart}->{Legend}{HCube};
+    my $xtext      = $x2_cube + $cw->{RefChart}->{Legend}{SpaceAfterCube};
+    my $ytext      = $y2_cube;
+    my $max_length = $cw->{RefChart}->{Legend}{LengthTextMax};
 
   LEGEND:
-    for my $NumberLegInLine ( 0 .. $CompositeWidget->{RefChart}->{Legend}{NbrPerLine} - 1 ) {
+    for my $number_leg_in_line ( 0 .. $cw->{RefChart}->{Legend}{NbrPerLine} - 1 ) {
       last LEGEND
-        unless ( defined $CompositeWidget->{RefChart}->{Data}{RefAllData}->[0]->[$IndexLegend] );
-      my $LineColor = $legendmarkercolors->[$IndexColor];
-      unless ( defined $LineColor ) {
-        $IndexColor = 0;
-        $LineColor  = $legendmarkercolors->[$IndexColor];
+        if ( not defined $cw->{RefChart}->{Data}{RefAllData}->[0]->[$index_legend] );
+      my $line_color = $legendmarkercolors->[$index_color];
+      if ( not defined $line_color ) {
+        $index_color = 0;
+        $line_color  = $legendmarkercolors->[$index_color];
       }
-      my $Tag = $IndexLegend . $CompositeWidget->{RefChart}->{TAGS}{Legend};
+      my $tag = $index_legend . $cw->{RefChart}->{TAGS}{Legend};
 
-      $CompositeWidget->createRectangle(
-        $x1Cube, $y1Cube, $x2Cube, $y2Cube,
-        -fill    => $LineColor,
-        -outline => $LineColor,
-        -tags    => [ $Tag, $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart}, ],
+      $cw->createRectangle(
+        $x1_cube, $y1_cube, $x2_cube, $y2_cube,
+        -fill    => $line_color,
+        -outline => $line_color,
+        -tags    => [ $tag, $cw->{RefChart}->{TAGS}{AllTagsChart}, ],
       );
 
       # Cut legend text if too long
-      my $Legende   = $CompositeWidget->{RefChart}->{Data}{RefAllData}->[0]->[$IndexLegend];
-      my $NewLegend = $Legende;
-      if ( length $NewLegend > $MaxLength ) {
-        $MaxLength -= 3;
-        $NewLegend =~ s/^(.{$MaxLength}).*/$1/;
-        $NewLegend .= '...';
+      my $legend     = $cw->{RefChart}->{Data}{RefAllData}->[0]->[$index_legend];
+      my $new_legend = $legend;
+      if ( length $new_legend > $max_length ) {
+        $max_length -= 3;
+        $new_legend =~ s/^(.{$max_length}).*/$1/;
+        $new_legend .= '...';
       }
 
-      my $Id = $CompositeWidget->createText(
-        $xText, $yText,
-        -text   => $NewLegend,
+      my $id = $cw->createText(
+        $xtext, $ytext,
+        -text   => $new_legend,
         -anchor => 'nw',
-        -tags   => [ $Tag, $CompositeWidget->{RefChart}->{TAGS}{AllTagsChart}, ],
+        -tags   => [ $tag, $cw->{RefChart}->{TAGS}{AllTagsChart}, ],
         -fill   => $legendcolor,
 
       );
       if ( defined $legendfont ) {
-        $CompositeWidget->itemconfigure( $Id, -font => $legendfont );
+        $cw->itemconfigure( $id, -font => $legendfont );
       }
 
-      $IndexColor++;
-      $IndexLegend++;
+      $index_color++;
+      $index_legend++;
 
       # cube
-      $x1Cube += $CompositeWidget->{RefChart}->{Legend}{LengthOneLegend};
-      $x2Cube += $CompositeWidget->{RefChart}->{Legend}{LengthOneLegend};
+      $x1_cube += $cw->{RefChart}->{Legend}{LengthOneLegend};
+      $x2_cube += $cw->{RefChart}->{Legend}{LengthOneLegend};
 
       # Text
-      $xText += $CompositeWidget->{RefChart}->{Legend}{LengthOneLegend};
+      $xtext += $cw->{RefChart}->{Legend}{LengthOneLegend};
 
-      my $PieTag = $Tag . $CompositeWidget->{RefChart}->{TAGS}{Pie};
-      $CompositeWidget->bind(
-        $Tag,
+      my $pie_tag = $tag . $cw->{RefChart}->{TAGS}{Pie};
+      $cw->bind(
+        $tag,
         '<Enter>',
         sub {
-          my $OtherColor = $CompositeWidget->{RefChart}->{Balloon}{ColorData}->[0];
-          if ( $OtherColor eq $CompositeWidget->{RefChart}{Pie}{$PieTag}{color} ) {
-            $OtherColor = $CompositeWidget->{RefChart}->{Balloon}{ColorData}->[1];
+          my $other_color = $cw->{RefChart}->{Balloon}{ColorData}->[0];
+          if ( $other_color eq $cw->{RefChart}{Pie}{$pie_tag}{color} ) {
+            $other_color = $cw->{RefChart}->{Balloon}{ColorData}->[1];
           }
-          $CompositeWidget->itemconfigure( $PieTag, -fill => $OtherColor, );
+          $cw->itemconfigure( $pie_tag, -fill => $other_color, );
         }
       );
 
-      $CompositeWidget->bind(
-        $Tag,
+      $cw->bind(
+        $tag,
         '<Leave>',
         sub {
-          $CompositeWidget->itemconfigure( $PieTag,
-            -fill => $CompositeWidget->{RefChart}{Pie}{$PieTag}{color}, );
+          $cw->itemconfigure( $pie_tag, -fill => $cw->{RefChart}{Pie}{$pie_tag}{color}, );
         }
       );
 
-      $MsgBalloon{$Tag}    = "$Legende - " . $CompositeWidget->{RefChart}{Pie}{$PieTag}{percent};
-      $MsgBalloon{$PieTag} = "$Legende - " . $CompositeWidget->{RefChart}{Pie}{$PieTag}{percent};
-
+      $msgballoon{$tag}     = "$legend - " . $cw->{RefChart}{Pie}{$pie_tag}{percent};
+      $msgballoon{$pie_tag} = "$legend - " . $cw->{RefChart}{Pie}{$pie_tag}{percent};
     }
   }
 
   #Balloon
-  unless ( defined $CompositeWidget->{RefChart}->{Balloon}{Obj} ) {
-    $CompositeWidget->{RefChart}->{Balloon}{Obj} = $CompositeWidget->Balloon(
-      -statusbar  => $CompositeWidget,
-      -background => $CompositeWidget->{RefChart}->{Balloon}{Background},
+  if ( not defined $cw->{RefChart}->{Balloon}{Obj} ) {
+    $cw->{RefChart}->{Balloon}{Obj} = $cw->Balloon(
+      -statusbar  => $cw,
+      -background => $cw->{RefChart}->{Balloon}{Background},
     );
 
-    $CompositeWidget->{RefChart}->{Balloon}{Obj}->attach(
-      $CompositeWidget,
+    $cw->{RefChart}->{Balloon}{Obj}->attach(
+      $cw,
       -balloonposition => 'mouse',
-      -msg             => \%MsgBalloon,
+      -msg             => \%msgballoon,
     );
   }
 
   return;
 }
 
-1;
+1; # End of Tk::Chart::Pie
 
 __END__
 
@@ -534,8 +510,8 @@ default, it is not enabled.
 To enabled background gradient color the first time, you firstly have to call B<enabled_gradientcolor> method and configure 
 your color and type of gradient with B<set_gradientcolor>.
 
-  $Chart->enabled_gradientcolor();
-  $Chart->set_gradientcolor(
+  $chart->enabled_gradientcolor();
+  $chart->set_gradientcolor(
       -start_color => '#6585ED',
       -end_color   => '#FFFFFF',
   );
@@ -549,9 +525,9 @@ Please, read L<Tk::Canvas::GradientColor/"WIDGET-SPECIFIC METHODS"> documentatio
   use warnings;
   use Tk;
   use Tk::Chart::Pie;
-  my $mw = new MainWindow( -title => 'Tk::Chart::Pie example', );
+  my $mw = MainWindow->new( -title => 'Tk::Chart::Pie example', );
 
-  my $Chart = $mw->Pie(
+  my $chart = $mw->Pie(
     -title      => 'CPAN mirrors around the World',
     -background => 'white',
     -linewidth  => 2,
@@ -562,7 +538,7 @@ Please, read L<Tk::Canvas::GradientColor/"WIDGET-SPECIFIC METHODS"> documentatio
     [ 97,       33,     3,        6,         61 ],
   );
 
-  $Chart->plot( \@data );
+  $chart->plot( \@data );
 
   MainLoop();
 
@@ -748,11 +724,11 @@ to enquire and modify the options described above.
 
 =over 4
 
-=item I<$Chart>->B<disabled_automatic_redraw>
+=item I<$chart>->B<disabled_automatic_redraw>
 
 When the graph is created and the widget size changes, the graph is automatically re-created. Call this method to avoid resizing.
 
-  $Chart->disabled_automatic_redraw;  
+  $chart->disabled_automatic_redraw;  
 
 =back
 
@@ -760,12 +736,12 @@ When the graph is created and the widget size changes, the graph is automaticall
 
 =over 4
 
-=item I<$Chart>->B<enabled_automatic_redraw>
+=item I<$chart>->B<enabled_automatic_redraw>
 
 Use this method to allow your graph to be recreated automatically when the widget size change. When the graph 
 is created for the first time, this method is called. 
 
-  $Chart->enabled_automatic_redraw;  
+  $chart->enabled_automatic_redraw;  
 
 =back
 
@@ -773,7 +749,7 @@ is created for the first time, this method is called.
 
 =over 4
 
-=item I<$PieChart>->B<clearchart>
+=item I<$pie_chart>->B<clearchart>
 
 This method allows you to clear the graph. The canvas 
 will not be destroy. It's possible to I<redraw> your 
@@ -785,7 +761,7 @@ last graph using the I<redraw method>.
 
 =over 4
 
-=item I<$PieChart>->B<plot>(I<\@data, ?arg>)
+=item I<$pie_chart>->B<plot>(I<\@data, ?arg>)
 
 Use this method to create your pie graph.
 
@@ -827,7 +803,7 @@ Default : B<0>
       [ '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th' ],
       [ 1,     '--',     5,     6,     3,     1.5,   1,     3,     4 ],
  );
- $PieChart->plot( \@data,
+ $pie_chart->plot( \@data,
    -substitutionvalue => '12',
  );
   # mistake, -- and NA will be replace by 12
@@ -847,39 +823,41 @@ If you use configure method to change a widget specific option, the modification
 If the graph was already displayed and if you not resize the widget, call B<redraw> method to 
 resolv the bug.
 
- ...
- $fenetre->Button(-text => 'Change title', -command => sub { 
-   $PieChart->configure(-title => 'other title'); 
-   } 
- )->pack;
- ...
- # title will be changed but not displayed if you not resize the widget.
-  
- ...
- $fenetre->Button(-text => 'Change title', -command => sub { 
-   $PieChart->configure(-title => 'other title'); 
-   $PieChart->redraw; 
-   } 
- )->pack;
- ...
- # OK, title will be changed and displayed without resize the widget.
+  ...
+  $mw->Button(
+  -text    => 'Change title', 
+  -command => sub { 
+      $pie_chart->configure(-title  => 'other title'); 
+    }, 
+  )->pack;
+  ...
+  # title will be changed but not displayed if you not resize the widget.
+    
+  ...
+  $mw->Button(
+    -text => 'Change title', 
+    -command => sub { 
+      $pie_chart->configure(-title  => 'other title'); 
+      $pie_chart->redraw; 
+    } 
+  )->pack;
+  ...
+  # OK, title will be changed and displayed without resize the widget.
 
 =head2 zoom
 
+$pie_chart-E<gt>B<zoom>(I<integer>);
+
 Zoom the graph (vertical and horizontal zoom).
 
-$PieChart->zoom(I<$zoom>);
-
-$zoom must be an integer great than 0.
-
- Ex : 300*300 size
- $PieChart->zoom(50); # size divide by 2 => 150*150
- ...
- $PieChart->zoom(200); # size multiplie by 2 => 600*600
- ...
- $PieChart->zoom(120); # 20% add in each axis => 360*360
- ...
- $PieChart->zoom(100); # original resize 300*300. 
+  Ex : 300*300 size
+  $pie_chart->zoom(50); # size divide by 2 => 150*150
+  ...
+  $pie_chart->zoom(200); # size multiplie by 2 => 600*600
+  ...
+  $pie_chart->zoom(120); # 20% add in each axis => 360*360
+  ...
+  $pie_chart->zoom(100); # original resize 300*300. 
 
 
 =head2 zoomx
@@ -887,18 +865,18 @@ $zoom must be an integer great than 0.
 Horizontal zoom.
 
  # original canvas size 300*300
- $PieChart->zoomx(50); # new size : 150*300
+ $pie_chart->zoomx(50); # new size : 150*300
  ...
- $PieChart->zoom(100); # new size : 300*300
+ $pie_chart->zoom(100); # new size : 300*300
 
 =head2 zoomy
 
 Vertical zoom.
 
  # original canvas size 300*300
- $PieChart->zoomy(50); # new size : 300*150
+ $pie_chart->zoomy(50); # new size : 300*150
  ...
- $PieChart->zoom(100); # new size : 300*300
+ $pie_chart->zoom(100); # new size : 300*300
 
 =head1 EXAMPLES
 
@@ -952,12 +930,10 @@ L<http://search.cpan.org/dist/Tk-Chart/>
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2010 Djibril Ousmanou, all rights reserved.
+Copyright 2011 Djibril Ousmanou, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
 
 =cut
-
-1; # End of Tk::Chart::Pie

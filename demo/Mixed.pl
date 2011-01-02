@@ -4,13 +4,13 @@ use warnings;
 use Tk;
 use Tk::Chart::Mixed;
 
-my $mw = new MainWindow(
+my $mw = MainWindow->new(
   -title      => 'Tk::Chart::Mixed',
   -background => 'white',
 );
 
 my @types = ( 'areas', 'bars', 'lines', 'points', 'bars', 'dashlines' );
-my $Chart = $mw->Mixed(
+my $chart = $mw->Mixed(
   -title      => 'Tk::Chart::Mixed',
   -xlabel     => 'X Label',
   -ylabel     => 'Y Label',
@@ -35,20 +35,20 @@ my @data = (
 );
 
 # Add a legend to the graph
-my @Legends = @types;
-$Chart->set_legend(
+my @legends = @types;
+$chart->set_legend(
   -title       => 'Title legend',
   -data        => [ 'legend 1', 'legend 2', 'legend 3', 'legend 4', 'legend 5', 'legend 6', 'legend 7', ],
   -titlecolors => 'blue',
 );
 
 # Add help identification
-$Chart->set_balloon();
+$chart->set_balloon();
 
 # Create the graph
-$Chart->plot( \@data );
+$chart->plot( \@data );
 
 # background order wanted
-$Chart->display_order( [qw/ areas bars lines  linespoints points /] );
+$chart->display_order( [qw/ areas bars lines  linespoints points /] );
 
 MainLoop();

@@ -21,11 +21,11 @@ L<Tk::Chart::Lines/"Options for point lines graph">
   use Tk;
   use Tk::Chart::Lines;
 
-  my $mw = new MainWindow(
+  my $mw = MainWindow->new(
     -title      => 'Splines example',
     -background => 'white',
   );
-  my $Chart = $mw->Lines(
+  my $chart = $mw->Lines(
     -title     => 'My graph title',
     -xlabel    => 'X Label',
     -ylabel    => 'Y Label',
@@ -41,18 +41,18 @@ L<Tk::Chart::Lines/"Options for point lines graph">
 
 
   # Add a legend to the graph
-  my @Legends = ( 'legend 1', 'legend 2', 'legend 3' );
-  $Chart->set_legend(
+  my @legends = ( 'legend 1', 'legend 2', 'legend 3' );
+  $chart->set_legend(
     -title       => 'Title legend',
-    -data        => \@Legends,
+    -data        => \@legends,
     -titlecolors => 'blue',
   );
 
   # Add help identification
-  $Chart->set_balloon();
+  $chart->set_balloon();
 
   # Create the graph
-  $Chart->plot( \@data );
+  $chart->plot( \@data );
 
   MainLoop();
 
@@ -62,7 +62,7 @@ See L<Tk::Chart::Lines>, L<Tk::Chart::FAQ>
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2010 Djibril Ousmanou, all rights reserved.
+Copyright 2011 Djibril Ousmanou, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

@@ -5,7 +5,7 @@ use Tk;
 use Tk::Chart::Mixed;
 use Tk::Pane;
 
-my $mw = new MainWindow(
+my $mw = MainWindow->new(
   -title      => 'Scrolled Graph',
   -background => 'white',
 );
@@ -21,7 +21,7 @@ $pane->Frame;
 $pane->pack(qw / -fill both -expand 1 /);
 
 my @types = qw/ areas bars lines points bars dashlines/;
-my $Chart = $pane->Mixed(
+my $chart = $pane->Mixed(
   -title      => 'My graph title',
   -xlabel     => 'X Label',
   -ylabel     => 'Y Label',
@@ -47,17 +47,17 @@ my @data = (
 );
 
 # Add a legend to the graph
-my @Legends = @types;
-$Chart->set_legend(
+my @legends = @types;
+$chart->set_legend(
   -title       => 'Title legend',
   -data        => [ 'legend 1', 'legend 2', 'legend 3', 'legend 4', 'legend 5', 'legend 6', 'legend 7', ],
   -titlecolors => 'blue',
 );
 
 # Add help identification
-$Chart->set_balloon();
+$chart->set_balloon();
 
 # Create the graph
-$Chart->plot( \@data );
+$chart->plot( \@data );
 
 MainLoop();

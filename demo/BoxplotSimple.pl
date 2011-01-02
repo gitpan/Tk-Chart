@@ -4,12 +4,12 @@ use warnings;
 use Tk;
 use Tk::Chart::Boxplots;
 
-my $mw = new MainWindow(
+my $mw = MainWindow->new(
   -title      => 'Tk::Chart::Boxplots',
   -background => 'white',
 );
 
-my $Chart = $mw->Boxplots(
+my $chart = $mw->Boxplots(
   -title      => 'Tk::Chart::Boxplots',
   -xlabel     => 'X Label',
   -ylabel     => 'Y Label',
@@ -35,37 +35,37 @@ my @data = (
 );
 
 # Add a legend to the graph
-my @Legends = ( 'boxplot 1', 'boxplot 2' );
-$Chart->set_legend(
+my @legends = ( 'boxplot 1', 'boxplot 2' );
+$chart->set_legend(
   -title => 'Title legend',
-  -data  => \@Legends,
+  -data  => \@legends,
 );
 
 # Add help identification
-$Chart->set_balloon();
+$chart->set_balloon();
 
 # Create the graph
-$Chart->plot( \@data );
+$chart->plot( \@data );
 
-my $ArrayRefInformation = $Chart->boxplot_information();
+my $ref_array_information = $chart->boxplot_information();
 
 # Print information of boxplot @{$data[2][3]} (2th sample, 4th data )
 print "Boxplot @{$data[2][3]} (2th sample, 4th data )\n";
-print "Outliers : @{$ArrayRefInformation->[1][3]->{outliers}}\n";
-print '25th percentile (Q1) : ', $ArrayRefInformation->[1][3]->{Q1},                   "\n";
-print '75th percentile (Q3) :',  $ArrayRefInformation->[1][3]->{Q3},                   "\n";
-print 'Smallest non-outlier : ', $ArrayRefInformation->[1][3]->{smallest_non_outlier}, "\n";
-print 'Largest non-outlier :',   $ArrayRefInformation->[1][3]->{largest_non_outlier},  "\n";
-print 'Median : ',               $ArrayRefInformation->[1][3]->{median},               "\n";
-print 'Mean : ',                 $ArrayRefInformation->[1][3]->{mean},                 "\n";
+print "Outliers : @{$ref_array_information->[1][3]->{outliers}}\n";
+print '25th percentile (Q1) : ', $ref_array_information->[1][3]->{Q1},                   "\n";
+print '75th percentile (Q3) :',  $ref_array_information->[1][3]->{Q3},                   "\n";
+print 'Smallest non-outlier : ', $ref_array_information->[1][3]->{smallest_non_outlier}, "\n";
+print 'Largest non-outlier :',   $ref_array_information->[1][3]->{largest_non_outlier},  "\n";
+print 'Median : ',               $ref_array_information->[1][3]->{median},               "\n";
+print 'Mean : ',                 $ref_array_information->[1][3]->{mean},                 "\n";
 
 my $one     = [ 210 .. 275 ];
 my $two     = [ 180, 190, 200, 220, 235, 245 ];
 my $three   = [ 40, 140 .. 150, 160 .. 180, 250 ];
 my $four    = [ 100 .. 125, 136 .. 140 ];
 my $five    = [ 10 .. 50, 100, 180 ];
-my @NewData = ( $one, $two, $three, $four, $five );
+my @new_data = ( $one, $two, $three, $four, $five );
 
-$Chart->add_data( \@NewData, 'boxplot 3' );
+$chart->add_data( \@new_data, 'boxplot 3' );
 
 MainLoop();

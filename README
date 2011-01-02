@@ -27,15 +27,15 @@ After installing, you can find documentation for this module with the
 perldoc command.
 
     perldoc Tk::Chart
-    perldoc Tk::Chart::Lines
-    perldoc Tk::Chart::Splines
-    perldoc Tk::Chart::Bars
     perldoc Tk::Chart::Areas
+    perldoc Tk::Chart::Bars
+    perldoc Tk::Chart::Boxplots
+    perldoc Tk::Chart::FAQ
+    perldoc Tk::Chart::Lines
+    perldoc Tk::Chart::Mixed
     perldoc Tk::Chart::Pie
     perldoc Tk::Chart::Points
-    perldoc Tk::Chart::Boxplots
-    perldoc Tk::Chart::Mixed
-    perldoc Tk::Chart::FAQ
+    perldoc Tk::Chart::Splines
 
 You can also look for information at:
 
@@ -54,7 +54,7 @@ You can also look for information at:
 
 LICENSE AND COPYRIGHT
 
-Copyright (C) 2010 Djibril Ousmanou
+Copyright (C) 2011 Djibril Ousmanou
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published

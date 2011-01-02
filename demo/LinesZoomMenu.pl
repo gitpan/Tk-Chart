@@ -4,12 +4,12 @@ use warnings;
 use Tk;
 use Tk::Chart::Lines;
 
-my $mw = new MainWindow(
+my $mw = MainWindow->new(
   -title      => 'Tk::Chart::Lines',
   -background => 'white',
 );
 
-my $Chart = $mw->Lines(
+my $chart = $mw->Lines(
   -title      => 'Tk::Chart::Lines with legend and zoom menu',
   -xlabel     => 'X Label',
   -ylabel     => 'Y Label',
@@ -25,73 +25,73 @@ my @data = (
 );
 
 # Add a legend to our graph
-my @Legends = ( 'legend 1', 'legend 2', 'legend 3' );
-$Chart->set_legend(
+my @legends = ( 'legend 1', 'legend 2', 'legend 3' );
+$chart->set_legend(
   -title       => 'Title legend',
-  -data        => \@Legends,
+  -data        => \@legends,
   -titlecolors => 'blue',
 );
 
 # I can see the legend text when mouse pass on line and
 # the line change color when mouse pass on legend text
-$Chart->set_balloon();
+$chart->set_balloon();
 
 # Create the graph
-$Chart->plot( \@data );
+$chart->plot( \@data );
 
-$Chart->add_data( [ 1 .. 9 ], 'legend  4' );
-my $menu = Menu( $Chart, [qw/30 50 80 100 150 200/] );
+$chart->add_data( [ 1 .. 9 ], 'legend  4' );
+my $menu = Menu( $chart, [qw/30 50 80 100 150 200/] );
 
 MainLoop();
 
 sub CanvasMenu {
-  my ( $Canvas, $x, $y, $CanvasMenu ) = @_;
-  $CanvasMenu->post( $x, $y );
+  my ( $canvas, $x, $y, $canvas_menu ) = @_;
+  $canvas_menu->post( $x, $y );
 
   return;
 }
 
 sub Menu {
-  my ( $Chart, $RefData ) = @_;
-  my %MenuConfig = (
+  my ( $chart, $ref_data ) = @_;
+  my %config_menu = (
     -tearoff    => 0,
     -takefocus  => 1,
     -background => 'white',
     -menuitems  => [],
   );
-  my $Menu = $Chart->Menu(%MenuConfig);
-  $Menu->add( 'cascade', -label => 'Zoom' );
-  $Menu->add( 'cascade', -label => 'Zoom X-axis' );
-  $Menu->add( 'cascade', -label => 'Zoom Y-axis' );
+  my $menu = $chart->Menu(%config_menu);
+  $menu->add( 'cascade', -label => 'Zoom' );
+  $menu->add( 'cascade', -label => 'Zoom X-axis' );
+  $menu->add( 'cascade', -label => 'Zoom Y-axis' );
 
-  my $SsMenuZoomX = $Menu->Menu(%MenuConfig);
-  my $SsMenuZoomY = $Menu->Menu(%MenuConfig);
-  my $SsMenuZoom  = $Menu->Menu(%MenuConfig);
+  my $zoomx_menu = $menu->Menu(%config_menu);
+  my $zoomy_menu = $menu->Menu(%config_menu);
+  my $zoom_menu  = $menu->Menu(%config_menu);
 
-  for my $Zoom ( @{$RefData} ) {
-    $SsMenuZoom->add(
+  for my $Zoom ( @{$ref_data} ) {
+    $zoom_menu->add(
       'command',
       -label   => "$Zoom \%",
-      -command => sub { $Chart->zoom($Zoom); }
+      -command => sub { $chart->zoom($Zoom); }
     );
-    $SsMenuZoomX->add(
+    $zoomx_menu->add(
       'command',
       -label   => "$Zoom \%",
-      -command => sub { $Chart->zoomx($Zoom); }
+      -command => sub { $chart->zoomx($Zoom); }
     );
-    $SsMenuZoomY->add(
+    $zoomy_menu->add(
       'command',
       -label   => "$Zoom \%",
-      -command => sub { $Chart->zoomy($Zoom); }
+      -command => sub { $chart->zoomy($Zoom); }
     );
 
   }
 
-  $Menu->entryconfigure( 'Zoom X-axis', -menu => $SsMenuZoomX );
-  $Menu->entryconfigure( 'Zoom Y-axis', -menu => $SsMenuZoomY );
-  $Menu->entryconfigure( 'Zoom',        -menu => $SsMenuZoom );
+  $menu->entryconfigure( 'Zoom X-axis', -menu => $zoomx_menu );
+  $menu->entryconfigure( 'Zoom Y-axis', -menu => $zoomy_menu );
+  $menu->entryconfigure( 'Zoom',        -menu => $zoom_menu );
 
-  $Chart->Tk::bind( '<ButtonPress-3>', [ \&CanvasMenu, Ev('X'), Ev('Y'), $Menu, $Chart ] );
+  $chart->Tk::bind( '<ButtonPress-3>', [ \&CanvasMenu, Ev('X'), Ev('Y'), $menu, $chart ] );
 
-  return $Menu;
+  return $menu;
 }

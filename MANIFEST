@@ -17,6 +17,7 @@ demo/BoxplotSimple.gif
 demo/BoxplotSimple.pl
 demo/GraphGradientColor.gif
 demo/GraphGradientColor.pl
+demo/Interval.gif
 demo/Interval.jpg
 demo/Interval.pl
 demo/LinesNegativeValues.gif
@@ -31,8 +32,8 @@ demo/Pie.gif
 demo/Pie.pl
 demo/PointsSimple.gif
 demo/PointsSimple.pl
-demo/ScrolledGraphDummies.gif
-demo/ScrolledGraphDummies.pl
+demo/ScrolledChart.gif
+demo/ScrolledChart.pl
 demo/SplinedBezierLines.gif
 demo/SplinedBezierLines.pl
 demo/SplinedLines.gif

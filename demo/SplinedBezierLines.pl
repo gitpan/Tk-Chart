@@ -4,11 +4,11 @@ use warnings;
 use Tk;
 use Tk::Chart::Lines;
 
-my $mw = new MainWindow(
+my $mw = MainWindow->new(
   -title      => 'Tk::Chart::Lines - Spline',
   -background => 'white',
 );
-my $Chart = $mw->Lines(
+my $chart = $mw->Lines(
   -title      => 'bezier curve examples',
   -xlabel     => 'X Label',
   -ylabel     => 'Y Label',
@@ -27,17 +27,17 @@ my @data = (
 );
 
 # Add a legend to the graph
-my @Legends = ( 'legend 1', 'legend 2', 'legend 3' );
-$Chart->set_legend(
+my @legends = ( 'legend 1', 'legend 2', 'legend 3' );
+$chart->set_legend(
   -title       => 'Title legend',
-  -data        => \@Legends,
+  -data        => \@legends,
   -titlecolors => 'blue',
 );
 
 # Add help identification
-$Chart->set_balloon();
+$chart->set_balloon();
 
 # Create the graph
-$Chart->plot( \@data );
+$chart->plot( \@data );
 
 MainLoop();

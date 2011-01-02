@@ -4,24 +4,24 @@ use warnings;
 use Tk;
 use Tk::Chart::Lines;
 
-my $mw = new MainWindow(
+my $mw = MainWindow->new(
   -title      => '-interval, -yminvalue and -ymaxvalue options',
   -background => 'white',
 );
 $mw->Label(
   -text => "3 charts using Tk::Chart::Bars with short interval data\n"
-    . "data : 29.9, 30, 29.95, 29.99, 29.92, 29.91, 29.97, 30.1",
+    . 'data : 29.9, 30, 29.95, 29.99, 29.92, 29.91, 29.97, 30.1',
   -background => 'white',
 )->pack(qw / -side top /);
 
-my $Chart = $mw->Lines( -title => 'No Interval', )->pack(qw / -side left -fill both -expand 1 /);
-my $Chart2 = $mw->Lines(
-  -title     => "Using -yminvalue and -ymaxvalue options",
+my $chart = $mw->Lines( -title => 'No Interval', )->pack(qw / -side left -fill both -expand 1 /);
+my $chart2 = $mw->Lines(
+  -title     => 'Using -yminvalue and -ymaxvalue options',
   -yminvalue => 29.5,
   -ymaxvalue => 30.5,
 )->pack(qw / -side left -fill both -expand 1/);
-my $Chart3 = $mw->Lines(
-  -title    => "Using -interval option",
+my $chart3 = $mw->Lines(
+  -title    => 'Using -interval option',
   -interval => 1,
 )->pack(qw / -side left -fill both -expand 1/);
 
@@ -31,9 +31,9 @@ my @data = (
 
 );
 
-foreach my $Chart ( $Chart, $Chart2, $Chart3 ) {
-  $Chart->enabled_gradientcolor();
-  $Chart->configure(
+foreach my $chart ( $chart, $chart2, $chart3 ) {
+  $chart->enabled_gradientcolor();
+  $chart->configure(
     -xlabel      => 'X Label',
     -ylabel      => 'Y Label',
     -background  => 'snow',
@@ -44,17 +44,17 @@ foreach my $Chart ( $Chart, $Chart2, $Chart3 ) {
   );
 
   # Add a legend to the graph
-  my @Legends = ('data 1');
-  $Chart->set_legend(
+  my @legends = ('data 1');
+  $chart->set_legend(
     -title => 'Legend',
-    -data  => \@Legends,
+    -data  => \@legends,
   );
 
   # Add help identification
-  $Chart->set_balloon();
+  $chart->set_balloon();
 
   # Create the graph
-  $Chart->plot( \@data );
+  $chart->plot( \@data );
 }
 
 MainLoop();
