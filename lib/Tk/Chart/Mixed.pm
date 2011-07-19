@@ -12,7 +12,7 @@ use Carp;
 #==================================================================
 
 use vars qw($VERSION);
-$VERSION = '1.02';
+$VERSION = '1.03';
 
 use base qw/ Tk::Derived Tk::Canvas::GradientColor /;
 use Tk::Balloon;
@@ -1430,6 +1430,66 @@ The different types are : B<areas>, B<bars>, B<lines>, B<dashlines> or B<points>
  -defaulttype => 'bars',
 
 Default : B<'lines'>
+
+=back
+
+
+=head1 WIDGET-SPECIFIC OPTIONS like Tk::Chart::Points
+
+These options are specific to point lines graph creation.
+
+=over 4
+
+=item Name:	B<Pointline>
+
+=item Class:	B<PointLine>
+
+=item Switch:	B<-pointline>
+
+Set a true value to create point lines graph.  
+
+ -pointline => 1, # 0 or 1
+
+Default : B<0>
+
+=item Name:	B<Markersize>
+
+=item Class:	B<MarkerSize>
+
+=item Switch:	B<-markersize>
+
+The size of the markers used in points graphs, in pixels. 
+
+ -markersize => 10, # integer
+
+Default : B<8>
+
+=item Name:	B<Markers>
+
+=item Class:	B<Markers>
+
+=item Switch:	B<-markers>
+
+This controls the order of markers in points graphs. 
+This should be a reference to an array of numbers:
+
+ -markers => [3, 5, 6],
+
+  Available markers are: 
+  
+  1:  filled square 
+  2:  open square 
+  3:  horizontal cross
+  4:  diagonal cross
+  5:  filled diamond
+  6:  open diamond
+  7:  filled circle
+  8:  open circle
+  9:  horizontal line
+  10: vertical line
+
+Default : B<[1,2,3,4,5,6,7,8]>
+Note that the last two are not part of the default list.
 
 =back
 

@@ -7,12 +7,12 @@ use Carp;
 #==================================================================
 # $Author    : Djibril Ousmanou                                   $
 # $Copyright : 2011                                               $
-# $Update    : 01/01/2011 00:00:00                                $
+# $Update    : 19/07/2011 22:48:20                                $
 # $AIM       : Create pie graph                                   $
 #==================================================================
 
 use vars qw($VERSION);
-$VERSION = '1.03';
+$VERSION = '1.04';
 
 use base qw/ Tk::Derived Tk::Canvas::GradientColor /;
 use Tk::Balloon;
@@ -56,6 +56,7 @@ sub Populate {
     -legendcolor => [ 'PASSIVE', 'Legendcolor', 'LegendColor', 'black' ],
     -legendfont  => [ 'PASSIVE', 'Legendfont',  'LegendFont',  '{Times} 8 {normal}' ],
     -setlegend   => [ 'PASSIVE', 'Setlegend',   'SetLegend',   1 ],
+    -piesize     => [ 'PASSIVE', 'Piesize',   'PieSize',   360 ],
 
     # verbeose mode
     -verbose => [ 'PASSIVE', 'verbose', 'Verbose', 1 ],
@@ -199,7 +200,13 @@ sub _viewdata {
   my ($cw) = @_;
 
   my $legendmarkercolors = $cw->cget( -colordata );
-
+  my $piesize            = $cw->cget( -piesize );
+  
+  if ( ($piesize <= 0) or ($piesize > 360) ) {
+    $cw->_error("The value of -piesize option must be between 1 and 360 degrees", 1);
+    return;
+  }
+  
   # Height legend
   $cw->_legend();
 
@@ -213,7 +220,7 @@ sub _viewdata {
   $cw->{RefChart}->{Pie}{x2} = $cw->{RefChart}->{Pie}{x1} + $cw->{RefChart}->{Pie}{Width};
 
   $cw->{RefChart}->{Pie}{y2}
-    = $cw->{RefChart}->{Canvas}{Height} 
+    = $cw->{RefChart}->{Canvas}{Height}
     - ( 2 * $cw->{RefChart}->{Canvas}{WidthEmptySpace} )
     - $cw->{RefChart}->{Legend}{Height};
 
@@ -222,7 +229,7 @@ sub _viewdata {
   foreach my $data ( @{ $cw->{RefChart}->{Data}{RefAllData}->[1] } ) {
     $somme += $data;
   }
-  $cw->{RefChart}->{Pie}{DegreeOneValue} = 360 / $somme;
+  $cw->{RefChart}->{Pie}{DegreeOneValue} = $piesize / $somme;
 
   # pie
   my ( $degrees, $start ) = ( 0, $cw->cget( -startangle ) );
@@ -248,8 +255,8 @@ sub _viewdata {
       -start  => $start,
       -tags   => [ $tag, $cw->{RefChart}->{TAGS}{AllTagsChart}, ],
       -width  => $cw->cget( -linewidth ),
+      -style => 'pieslice',
     );
-
     $cw->{RefChart}{Pie}{$tag}{color} = $color;
     $cw->{RefChart}{Pie}{$tag}{percent} = "$value (" . _roundvalue( ( $value * 100 ) / $somme ) . '%)';
 
@@ -523,24 +530,27 @@ Please, read L<Tk::Canvas::GradientColor/"WIDGET-SPECIFIC METHODS"> documentatio
   #!/usr/bin/perl
   use strict;
   use warnings;
+  
   use Tk;
   use Tk::Chart::Pie;
   my $mw = MainWindow->new( -title => 'Tk::Chart::Pie example', );
-
+  
   my $chart = $mw->Pie(
-    -title      => 'CPAN mirrors around the World',
+    -title => 'Registered public CPAN countries sites' . "\n"
+      . 'around the World (266 sites, 61 countries in 19 July 2011)',
     -background => 'white',
     -linewidth  => 2,
   )->pack(qw / -fill both -expand 1 /);
-
+  
   my @data = (
-    [ 'Europe', 'Asia', 'Africa', 'Oceania', 'Americas' ],
-    [ 97,       33,     3,        6,         61 ],
+    [ 'Africa', 'Asia', 'Central America', 'Europe', 'North America', 'Oceania', 'South America' ],
+    [ 2,        16,     1,                 32,       3,               3,         4 ],
   );
-
+  
   $chart->plot( \@data );
-
+  
   MainLoop();
+
 
 =head1 STANDARD OPTIONS
 
@@ -567,7 +577,7 @@ The default configuration is already OK, but you can change it.
 
 Title of your graph.
   
- -title => 'My pie graph title',
+  -title => 'My pie graph title',
 
 Default : B<undef>
 
@@ -579,7 +589,7 @@ Default : B<undef>
 
 Position of title : B<center>, B<left> or B<right>
   
- -titleposition => 'left',
+  -titleposition => 'left',
 
 Default : B<center>
 
@@ -591,7 +601,7 @@ Default : B<center>
 
 Title color of your graph.
   
- -titlecolor => 'red',
+  -titlecolor => 'red',
 
 Default : B<black>
 
@@ -603,7 +613,7 @@ Default : B<black>
 
 Set the font for the title text. See also textfont option. 
   
- -titlefont => 'Times 15 {normal}',
+  -titlefont => 'Times 15 {normal}',
 
 Default : B<{Times} 12 {bold}>
 
@@ -615,7 +625,7 @@ Default : B<{Times} 12 {bold}>
 
 Height for title graph space.
   
- -titleheight => 100,
+  -titleheight => 100,
 
 Default : B<40>
 
@@ -627,7 +637,7 @@ Default : B<40>
 
 Set width of all lines slice pie inthe graph.
  
- -linewidth => 10,
+  -linewidth => 10,
 
 Default : B<1>
 
@@ -639,7 +649,7 @@ Default : B<1>
 
 This controls the colors of the lines. This should be a reference to an array of color names.
  
- -colordata => [ qw(green pink blue cyan) ],
+  -colordata => [ qw(green pink blue cyan) ],
 
 Default : 
 
@@ -652,6 +662,19 @@ Default :
 The default array contain 24 colors. If you have more than 24 samples, the next line 
 will have the color of the first array case (red).
 
+=item Name:	B<Piesize>
+
+=item Class:	B<PieSize>
+
+=item Switch:	B<-piesize>
+
+The piesize represents the size of the pie graph. It must be between 1 and 360 degrees. 
+You can change this value to draw a pie graph in a full circle, a semicircle, quadrant...
+
+  -piesize => 180, # Pie graph will be display in a half circle
+
+Default : B<360>
+
 =item Name:	B<Startangle>
 
 =item Class:	B<StartAngle>
@@ -660,7 +683,7 @@ will have the color of the first array case (red).
 
 The angle at which the first data slice will be displayed, with 0 degrees being "3 o'clock".
 
- -startangle => 90,
+  -startangle => 90,
 
 Default : B<0>
 
@@ -672,7 +695,7 @@ Default : B<0>
 
 Warning will be print if necessary.
  
- -verbose => 0,
+  -verbose => 0,
 
 Default : B<1>
 
@@ -684,7 +707,7 @@ Default : B<1>
 
 Color of legend text.
  
- -legendcolor => 'white',
+  -legendcolor => 'white',
 
 Default : B<'black'>
 
@@ -696,7 +719,7 @@ Default : B<'black'>
 
 Font of text legend.
  
- -legendfont => '{Arial} 8 {normal}',
+  -legendfont => '{Arial} 8 {normal}',
 
 Default : B<{Times} 8 {normal}>
 
@@ -708,7 +731,7 @@ Default : B<{Times} 8 {normal}>
 
 If set to true value, the legend will be display.
  
- -setlegend => 0,
+  -setlegend => 0,
 
 Default : B<1>
 
@@ -777,17 +800,17 @@ Fill an array of arrays with the legend values and the values of the datasets (I
 Make sure that every array have the same size, otherwise Tk::Chart::Pie 
 will complain and refuse to compile the graph.
 
- my @data = (
+  my @data = (
      [ '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th' ],
      [ 1,     2,     52,    6,     3,     17.5,  1,     43,    10 ]
- );
+  );
 
 @data have to contain two arrays, the legend values and the values of the datasets.
 
 If you don't have a value for a point in a dataset, you can use undef, 
 and the point will be skipped.
 
- [ 1,     undef,     5,     6,     3,     1.5,   undef,     3,     4 ]
+  [ 1,     undef,     5,     6,     3,     1.5,   undef,     3,     4 ]
 
 
 =item *
@@ -799,13 +822,13 @@ If you have a no real number value in a dataset, it will be replaced by a consta
 Default : B<0>
 
 
- my @data = (
+  my @data = (
       [ '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th' ],
       [ 1,     '--',     5,     6,     3,     1.5,   1,     3,     4 ],
- );
- $pie_chart->plot( \@data,
-   -substitutionvalue => '12',
- );
+  );
+  $pie_chart->plot( \@data,
+    -substitutionvalue => '12',
+  );
   # mistake, -- and NA will be replace by 12
 
 -substitutionvalue have to be a real number (ex : 12, .25, 02.25, 5.2e+11, etc ...) 
@@ -864,19 +887,19 @@ Zoom the graph (vertical and horizontal zoom).
 
 Horizontal zoom.
 
- # original canvas size 300*300
- $pie_chart->zoomx(50); # new size : 150*300
- ...
- $pie_chart->zoom(100); # new size : 300*300
+  # original canvas size 300*300
+  $pie_chart->zoomx(50); # new size : 150*300
+  ...
+  $pie_chart->zoom(100); # new size : 300*300
 
 =head2 zoomy
 
 Vertical zoom.
 
- # original canvas size 300*300
- $pie_chart->zoomy(50); # new size : 300*150
- ...
- $pie_chart->zoom(100); # new size : 300*300
+  # original canvas size 300*300
+  $pie_chart->zoomy(50); # new size : 300*150
+  ...
+  $pie_chart->zoom(100); # new size : 300*300
 
 =head1 EXAMPLES
 

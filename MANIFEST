@@ -51,6 +51,7 @@ lib/Tk/Chart/Splines.pod
 lib/Tk/Chart/Utils.pm
 Makefile.PL
 MANIFEST
+META.json
 META.yml
 README
 t/00-load.t

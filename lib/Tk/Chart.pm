@@ -3,7 +3,7 @@ package Tk::Chart;
 #==================================================================
 # $Author    : Djibril Ousmanou                                   $
 # $Copyright : 2011                                               $
-# $Update    : 01/01/2011 00:00:00                                $
+# $Update    : 19/07/2011 23:12:11                                $
 # $AIM       : Private functions for Tk::Chart modules            $
 #==================================================================
 
@@ -13,7 +13,7 @@ use Carp;
 use Tk::Chart::Utils qw / :DUMMIES /;
 
 use vars qw($VERSION);
-$VERSION = '1.16';
+$VERSION = '1.17';
 
 use Exporter;
 
@@ -277,6 +277,7 @@ sub _treatparameters {
     -longticks    -markersize     -pointline
     -smoothline   -spline         -bezier
     -interval     -xlongticks     -ylongticks   -setlegend
+    -piesize
     /;
 
   foreach my $option_name (@integer_option) {

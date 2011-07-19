@@ -5,7 +5,7 @@ package Tk::Chart::Utils;
 # $Copyright : 2011                                                                  $
 # $Update    : 01/01/2011 00:00:00                                                   $
 # $AIM       : Private functions and public shared methods between Tk::Chart modules $
-#==================================================================
+#=====================================================================================
 
 use warnings;
 use strict;
