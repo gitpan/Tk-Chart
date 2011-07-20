@@ -3,7 +3,7 @@ package Tk::Chart::Utils;
 #=====================================================================================
 # $Author    : Djibril Ousmanou                                                      $
 # $Copyright : 2011                                                                  $
-# $Update    : 01/01/2011 00:00:00                                                   $
+# $Update    : 20/07/2011 22:14:02                                                   $
 # $AIM       : Private functions and public shared methods between Tk::Chart modules $
 #=====================================================================================
 
@@ -12,7 +12,7 @@ use strict;
 use Carp;
 
 use vars qw($VERSION);
-$VERSION = '1.02';
+$VERSION = '1.03';
 
 use Exporter;
 use POSIX qw / floor /;
@@ -24,7 +24,7 @@ my @module_export = qw (
   enabled_automatic_redraw           disabled_automatic_redraw
   _delete_array_doublon redraw       add_data
   delete_balloon                     set_balloon
-  _isainteger
+  _isainteger                        _set_data_cumulate_percent
 );
 my @modules_display = qw/ display_values /;
 
@@ -303,6 +303,36 @@ sub _get_controlpoints {
   return \@all_controlpoints;
 }
 
+sub _set_data_cumulate_percent {
+  my ( $cw, $ref_data ) = @_;
+
+  # x-axis
+  my @new_data = ( $ref_data->[0] );
+
+  # Number of data and values in a data
+  my $number_values = scalar @{ $ref_data->[0] };
+  my $number_data   = scalar @{$ref_data} - 1;
+  push @new_data, [] for ( 1 .. $number_data );
+
+  # Change data to set percent data instead values
+  for my $index_value ( 0 .. $number_values - 1 ) {
+    my $sum = 0;
+
+    # Sum calculate
+    for my $index_data ( 1 .. $number_data ) {
+      $sum += $ref_data->[$index_data][$index_value];
+    }
+
+    # Change value
+    for my $index_data ( 1 .. $number_data ) {
+      my $new_value = ( $ref_data->[$index_data][$index_value] / $sum ) * 100;
+      $new_data[$index_data][$index_value] = sprintf '%.5g', $new_value;
+    }
+  }
+
+  return \@new_data;
+}
+
 sub redraw {
   my ($cw) = @_;
 
@@ -328,12 +358,20 @@ sub add_data {
     return;
   }
 
-  push @{ $cw->{RefChart}->{Data}{RefAllData} }, $ref_data;
+  my $refdata = $cw->{RefChart}->{Data}{RefAllData};
+
+  # Cumulate pourcent => data change
+  my $cumulatepercent = $cw->cget( -cumulatepercent );
+  if ( $cumulatepercent == 1 ) {
+    $refdata = $cw->{RefChart}->{Data}{RefAllDataBeforePercent};
+  }
+
+  push @{$refdata}, $ref_data;
   if ( $cw->{RefChart}->{Legend}{NbrLegend} > 0 ) {
     push @{ $cw->{RefChart}->{Legend}{DataLegend} }, $legend;
   }
 
-  $cw->plot( $cw->{RefChart}->{Data}{RefAllData} );
+  $cw->plot($refdata);
 
   return;
 }
@@ -468,6 +506,7 @@ sub disabled_automatic_redraw {
 1;
 
 __END__
+
 =head1 NAME
 
 Tk::Chart::Utils - Private Tk::Chart methods

@@ -18,8 +18,7 @@ my $chart = $mw->Mixed(
   -linewidth  => 2,
   -typemixed  => \@types,
   -markers    => [ 3, 5, 6 ],
-
-  -longticks => 1,
+  -longticks  => 1,
 )->pack(qw / -fill both -expand 1 /);
 
 my @data = (

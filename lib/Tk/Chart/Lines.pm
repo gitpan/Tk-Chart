@@ -7,12 +7,12 @@ use Carp;
 #==================================================================
 # $Author    : Djibril Ousmanou                                   $
 # $Copyright : 2011                                               $
-# $Update    : 01/01/2011 00:00:00                                $
+# $Update    : 20/07/2011 13:17:21                                $
 # $AIM       : Create line graph                                  $
 #==================================================================
 
 use vars qw($VERSION);
-$VERSION = '1.03';
+$VERSION = '1.04';
 
 use base qw/ Tk::Derived Tk::Canvas::GradientColor /;
 use Tk::Balloon;

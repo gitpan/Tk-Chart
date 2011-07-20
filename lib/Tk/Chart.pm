@@ -3,7 +3,7 @@ package Tk::Chart;
 #==================================================================
 # $Author    : Djibril Ousmanou                                   $
 # $Copyright : 2011                                               $
-# $Update    : 19/07/2011 23:12:11                                $
+# $Update    : 20/07/2011 22:12:04                                $
 # $AIM       : Private functions for Tk::Chart modules            $
 #==================================================================
 
@@ -13,7 +13,7 @@ use Carp;
 use Tk::Chart::Utils qw / :DUMMIES /;
 
 use vars qw($VERSION);
-$VERSION = '1.17';
+$VERSION = '1.18';
 
 use Exporter;
 
@@ -277,7 +277,7 @@ sub _treatparameters {
     -longticks    -markersize     -pointline
     -smoothline   -spline         -bezier
     -interval     -xlongticks     -ylongticks   -setlegend
-    -piesize
+    -piesize      -cumulatepercent
     /;
 
   foreach my $option_name (@integer_option) {
@@ -315,9 +315,7 @@ sub _treatparameters {
   my $markers = $cw->cget( -markers );
   if ( ( defined $markers ) and ( ref $markers ne 'ARRAY' ) ) {
     $cw->_error(
-      "Can't set -markers to '$markers', $markers' is not an array reference\nEx : -markers => [5,8,2]",
-      1
-    );
+      "Can't set -markers to '$markers', $markers' is not an array reference\nEx : -markers => [5,8,2]", 1 );
 
     return;
   }
@@ -1087,11 +1085,21 @@ sub _ylabelposition {
 }
 
 sub _manage_minmaxvalues {
-  my ( $cw, $yticknumber, $cumulate ) = @_;
+  my ($cw) = @_;
 
-  my $yminvalue = $cw->cget( -yminvalue );
-  my $ymaxvalue = $cw->cget( -ymaxvalue );
-  my $interval  = $cw->cget( -interval );
+  # Bars : Cumulate percent => min = 0 and max = 100
+  my $cumulatepercent = $cw->cget( -cumulatepercent );
+  if ( defined $cumulatepercent and $cumulatepercent == 1 ) {
+    $cw->{RefChart}->{Data}{MinYValue} = 0;
+    $cw->{RefChart}->{Data}{MaxYValue} = 100;
+    return 1;
+  }
+
+  my $cumulate    = $cw->cget( -cumulate );
+  my $yticknumber = $cw->cget( -yticknumber );
+  my $yminvalue   = $cw->cget( -yminvalue );
+  my $ymaxvalue   = $cw->cget( -ymaxvalue );
+  my $interval    = $cw->cget( -interval );
 
   if ( defined $yminvalue and defined $ymaxvalue ) {
     if (

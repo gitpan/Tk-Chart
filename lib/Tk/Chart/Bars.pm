@@ -7,12 +7,12 @@ use Carp;
 #==================================================================
 # $Author    : Djibril Ousmanou                                   $
 # $Copyright : 2011                                               $
-# $Update    : 01/01/2011 00:00:00                                $
+# $Update    : 20/07/2011 22:13:53                                $
 # $AIM       : Create bars graph                                  $
 #==================================================================
 
 use vars qw($VERSION);
-$VERSION = '1.03';
+$VERSION = '1.04';
 
 use base qw/ Tk::Derived Tk::Canvas::GradientColor /;
 use Tk::Balloon;
@@ -50,6 +50,7 @@ sub Populate {
 
     -overwrite       => [ 'PASSIVE', 'Overwrite',       'OverWrite',       0 ],
     -cumulate        => [ 'PASSIVE', 'Cumulate',        'Cumulate',        0 ],
+    -cumulatepercent => [ 'PASSIVE', 'Cumulatepercent', 'CumulatePercent', 0 ],
     -spacingbar      => [ 'PASSIVE', 'Spacingbar',      'SpacingBar',      1 ],
     -showvalues      => [ 'PASSIVE', 'Showvalues',      'ShowValues',      0 ],
     -barsvaluescolor => [ 'PASSIVE', 'BarsValuescolor', 'BarsValuesColor', 'black' ],
@@ -163,7 +164,7 @@ sub set_legend {
 
   my @legend_option = qw / -box -legendmarkerheight -legendmarkerwidth -heighttitle /;
   foreach my $option_name (@legend_option) {
-    if ( defined $info_legend{$option_name} and (! _isainteger( $info_legend{$option_name} ) ) ) {
+    if ( defined $info_legend{$option_name} and ( !_isainteger( $info_legend{$option_name} ) ) ) {
       $cw->_error(
         "'Can't set $option_name to "
           . "'$info_legend{$option_name}', $info_legend{$option_name}' isn't numeric",
@@ -638,6 +639,7 @@ sub _viewdata {
   my $legendmarkercolors = $cw->cget( -colordata );
   my $overwrite          = $cw->cget( -overwrite );
   my $cumulate           = $cw->cget( -cumulate );
+  my $cumulatepercent    = $cw->cget( -cumulatepercent );
   my $spacingbar         = $cw->cget( -spacingbar );
   my $showvalues         = $cw->cget( -showvalues );
   my $outlinebar         = $cw->cget( -outlinebar );
@@ -670,7 +672,7 @@ sub _viewdata {
       }
 
       my ( $x, $y, $x0, $y0 ) = ();
-      if ( $overwrite == 1 or $cumulate == 1 ) {
+      if ( $overwrite == 1 or $cumulate == 1 or $cumulatepercent == 1 ) {
 
         # coordinates x and y values
         $x = $cw->{RefChart}->{Axis}{Cx0} + $number_data * $cw->{RefChart}->{Axis}{Xaxis}{SpaceBetweenTick};
@@ -681,7 +683,7 @@ sub _viewdata {
         $y0 = $cw->{RefChart}->{Axis}{Cy0};
 
         # cumulate bars
-        if ( $cumulate == 1 ) {
+        if ( $cumulate == 1 or $cumulatepercent == 1 ) {
 
           $y -= $cumulatey[ $number_data - 1 ];
           $y0 = $y + ( $data * $cw->{RefChart}->{Axis}{Yaxis}{HeightUnit} );
@@ -771,12 +773,13 @@ sub _viewdata {
 sub plot {
   my ( $cw, $ref_data, %option ) = @_;
 
-  my $overwrite   = $cw->cget( -overwrite );
-  my $cumulate    = $cw->cget( -cumulate );
-  my $yticknumber = $cw->cget( -yticknumber );
-  my $yminvalue   = $cw->cget( -yminvalue );
-  my $ymaxvalue   = $cw->cget( -ymaxvalue );
-  my $interval    = $cw->cget( -interval );
+  my $overwrite       = $cw->cget( -overwrite );
+  my $cumulate        = $cw->cget( -cumulate );
+  my $cumulatepercent = $cw->cget( -cumulatepercent );
+  my $yticknumber     = $cw->cget( -yticknumber );
+  my $yminvalue       = $cw->cget( -yminvalue );
+  my $ymaxvalue       = $cw->cget( -ymaxvalue );
+  my $interval        = $cw->cget( -interval );
 
   if ( defined $option{-substitutionvalue}
     and _isanumber( $option{-substitutionvalue} ) )
@@ -833,16 +836,21 @@ sub plot {
     $i++;
   }
 
-  $cw->{RefChart}->{Data}{RefXLegend}  = $ref_data->[0];
-  $cw->{RefChart}->{Data}{RefAllData}  = $ref_data;
-  $cw->{RefChart}->{Data}{PlotDefined} = 1;
-
-  if ( $cumulate == 1 ) {
+  # Cumulate pourcent => data change
+  if ( $cumulatepercent == 1 ) {
+    $cw->{RefChart}->{Data}{RefAllDataBeforePercent} = $ref_data;
+    $ref_data = $cw->_set_data_cumulate_percent($ref_data);
+  }
+  elsif ( $cumulate == 1 ) {
     $cw->{RefChart}->{Data}{MaxYValue} = _maxarray( \@arraytemp );
     $cw->{RefChart}->{Data}{MinYValue} = _minarray( \@arraytemp );
   }
 
-  $cw->_manage_minmaxvalues( $yticknumber, $cumulate );
+  $cw->{RefChart}->{Data}{RefXLegend}  = $ref_data->[0];
+  $cw->{RefChart}->{Data}{RefAllData}  = $ref_data;
+  $cw->{RefChart}->{Data}{PlotDefined} = 1;
+
+  $cw->_manage_minmaxvalues();
   $cw->_chartconstruction;
 
   return 1;
@@ -953,7 +961,7 @@ B<-yscrollincrement>
 If set to 0, bars of different data sets will be drawn next to each other. 
 If set to 1, they will be drawn in front of each other.
 
- -overwrite => 1, # 0 or 1
+  -overwrite => 1, # 0 or 1
 
 Default : B<0>
 
@@ -971,7 +979,25 @@ A side effect of this is that overwrite will be set to a true value.
 If you have negative values in your data sets, setting this option might 
 produce odd results. Of course, the graph itself would be quite meaningless.
 
- -cumulate => 1, # 0 or 1
+  -cumulate => 1, # 0 or 1
+
+Default : B<0>
+
+=item Name:	B<Cumulatepercent>
+
+=item Class:	B<CumulatePercent>
+
+=item Switch:	B<-cumulatepercent>
+
+If this attribute is set to a true value, the data sets will be cumulated as percentage. 
+This means that they will be stacked on top of each other and each bar will have the same height.
+
+A side effect of this is that overwrite will be set to a true value.
+
+If you have negative values in your data sets, setting this option might 
+produce odd results. Of course, the graph itself would be quite meaningless.
+
+  -cumulatepercent => 1, # 0 or 1
 
 Default : B<0>
 
@@ -986,7 +1012,7 @@ No effort is being made to ensure that there is enough space for the text.
 
 If -overwrite or -cumulate set to 1, the values will not be hide by bars.
 
- -showvalues => 0, # 0 or 1
+  -showvalues => 0, # 0 or 1
 
 Default : B<1>
 
@@ -998,7 +1024,7 @@ Default : B<1>
 
 Color of each data point above the bar if -showvalues set to 1.
 
- -barsvaluescolor => 'white',
+  -barsvaluescolor => 'white',
 
 Default : B<black>
 
@@ -1010,7 +1036,7 @@ Default : B<black>
 
 Set this to 1 to display remove space between each bar. 
 
- -spacingbar => 0, # 0 or 1
+  -spacingbar => 0, # 0 or 1
 
 Default : B<1>
 
@@ -1043,7 +1069,7 @@ the default configuration.
 
 Title of your graph.
 
- -title => 'My graph title',
+  -title => 'My graph title',
 
 Default : B<undef>
 
@@ -1055,7 +1081,7 @@ Default : B<undef>
 
 Position of title : B<center>, B<left> or B<right>
   
- -titleposition => 'left',
+  -titleposition => 'left',
 
 Default : B<center>
 
@@ -1067,7 +1093,7 @@ Default : B<center>
 
 Title color of your graph.
 
- -titlecolor => 'red',
+  -titlecolor => 'red',
 
 Default : B<black>
 
@@ -1079,7 +1105,7 @@ Default : B<black>
 
 Set the font for the title text. See also textfont option. 
 
- -titlefont => 'Times 15 {normal}',
+  -titlefont => 'Times 15 {normal}',
 
 Default : B<{Times} 12 {bold}>
 
@@ -1091,7 +1117,7 @@ Default : B<{Times} 12 {bold}>
 
 Height for title graph space.
 
- -titleheight => 100,
+  -titleheight => 100,
 
 Default : B<40>
 
@@ -1103,7 +1129,7 @@ Default : B<40>
 
 The label to be printed just below the x-axis.
 
- -xlabel => 'X label',
+  -xlabel => 'X label',
 
 Default : B<undef>
 
@@ -1115,7 +1141,7 @@ Default : B<undef>
 
 Set x label color. See also textcolor option.
 
- -xlabelcolor => 'red',
+  -xlabelcolor => 'red',
 
 Default : B<black>
 
@@ -1127,7 +1153,7 @@ Default : B<black>
 
 Set the font for the x label text. See also textfont option.
 
- -xlabelfont => 'Times 15 {normal}',
+  -xlabelfont => 'Times 15 {normal}',
 
 Default : B<{Times} 10 {bold}>
 
@@ -1139,7 +1165,7 @@ Default : B<{Times} 10 {bold}>
 
 Height for x label space.
 
- -xlabelheight => 50,
+  -xlabelheight => 50,
 
 Default : B<30>
 
@@ -1159,7 +1185,7 @@ Eg:
 
 See also -xvaluesregex option.
 
- -xlabelskip => 2,
+  -xlabelskip => 2,
 
 Default : B<0>
 
@@ -1171,7 +1197,7 @@ Default : B<0>
 
 Set x values colors. See also textcolor option.
 
- -xvaluecolor => 'red',
+  -xvaluecolor => 'red',
 
 Default : B<black>
 
@@ -1183,7 +1209,7 @@ Default : B<black>
 
 Width for x values space.
 
- -xvaluespace => 50,
+  -xvaluespace => 50,
 
 Default : B<30>
 
@@ -1195,7 +1221,7 @@ Default : B<30>
 
 View values on x-axis.
  
- -xvalueview => 0, # 0 or 1
+  -xvalueview => 0, # 0 or 1
 
 Default : B<1>
 
@@ -1208,11 +1234,11 @@ Default : B<1>
 View the x values which will match with regex. It allows you to display tick on x-axis and values 
 that you want. You can combine it with -xlabelskip to display many dataset.
 
- ...
- ['leg1', 'leg2', 'data1', 'data2', 'symb1', 'symb2']
- ...
+  ...
+  ['leg1', 'leg2', 'data1', 'data2', 'symb1', 'symb2']
+  ...
 
- -xvaluesregex => qr/leg/i,
+  -xvaluesregex => qr/leg/i,
 
 On the graph, just leg1 and leg2 will be display.
 
@@ -1226,7 +1252,7 @@ Default : B<qr/.+/>
 
 The label to be printed next to y-axis.
 
- -ylabel => 'Y label',
+  -ylabel => 'Y label',
 
 Default : B<undef>
 
@@ -1238,7 +1264,7 @@ Default : B<undef>
 
 Set the color of y label. See also textcolor option. 
 
- -ylabelcolor => 'red',
+  -ylabelcolor => 'red',
 
 Default : B<black>
 
@@ -1250,7 +1276,7 @@ Default : B<black>
 
 Set the font for the y label text. See also textfont option. 
 
- -ylabelfont => 'Times 15 {normal}',
+  -ylabelfont => 'Times 15 {normal}',
 
 Default : B<{Times} 10 {bold}>
 
@@ -1262,7 +1288,7 @@ Default : B<{Times} 10 {bold}>
 
 Width of space for y label.
 
- -ylabelwidth => 30,
+  -ylabelwidth => 30,
 
 Default : B<5>
 
@@ -1274,7 +1300,7 @@ Default : B<5>
 
 Set the color of y values. See also valuecolor option.
 
- -yvaluecolor => 'red',
+  -yvaluecolor => 'red',
 
 Default : B<black>
 
@@ -1286,7 +1312,7 @@ Default : B<black>
 
 View values on y-axis.
  
- -yvalueview => 0, # 0 or 1
+  -yvalueview => 0, # 0 or 1
 
 Default : B<1>
 
@@ -1298,7 +1324,7 @@ Default : B<1>
 
 Minimum value displayed on the y-axis. See also -interval option.
  
- -yminvalue => 10.12,
+  -yminvalue => 10.12,
 
 Default : B<0>
 
@@ -1310,7 +1336,7 @@ Default : B<0>
 
 Maximum value displayed on the y-axis. See also -interval option.
  
- -ymaxvalue => 5,
+  -ymaxvalue => 5,
 
 Default : B<Computed from data sets>
 
@@ -1323,7 +1349,7 @@ Default : B<Computed from data sets>
 If set to a true value, -yminvalue and -ymaxvalue will be fixed to minimum and maximum values of data sets. 
 It overwrites -yminvalue and -ymaxvalue options.
  
- -interval => 1, # 0 or 1
+  -interval => 1, # 0 or 1
 
 Default : B<0>
 
@@ -1335,7 +1361,7 @@ Default : B<0>
 
 Combine xlabelcolor and ylabelcolor options. See also textcolor option.
 
- -labelscolor => 'red',
+  -labelscolor => 'red',
 
 Default : B<undef>
 
@@ -1348,7 +1374,7 @@ Default : B<undef>
 Set the color of x, y values in axes. It combines xvaluecolor 
 and yvaluecolor options.
 
- -valuescolor => 'red',
+  -valuescolor => 'red',
 
 Default : B<undef>
 
@@ -1361,7 +1387,7 @@ Default : B<undef>
 Set the color of x, y labels and title text. 
 It combines titlecolor, xlabelcolor and ylabelcolor options.
 
- -textcolor => 'red',
+  -textcolor => 'red',
 
 Default : B<undef>
 
@@ -1374,7 +1400,7 @@ Default : B<undef>
 Set the font of x, y labels and title text. It combines titlefont, 
 xlabelfont and ylabelfont options.
 
- -textfont => 'Times 15 {normal}',
+  -textfont => 'Times 15 {normal}',
 
 Default : B<undef>
 
@@ -1386,7 +1412,7 @@ Default : B<undef>
 
 If longticks is a true value, x and y ticks will be drawn with the same length as the axes. See also -xlongticks and -ylongticks options. 
 
- -longticks => 1, #  0 or 1
+  -longticks => 1, #  0 or 1
 
 Default : B<0>
 
@@ -1410,7 +1436,7 @@ Default : B<undef>
 
 If xlongticks is a true value, x ticks will be drawn with the same length as the x-axis. See also -longticks.
 
- -xlongticks => 1, #  0 or 1
+  -xlongticks => 1, #  0 or 1
 
 Default : B<0>
 
@@ -1422,7 +1448,7 @@ Default : B<0>
 
 If ylongticks is a true value, y ticks will be drawn with the same length as the axes. See also -longticks.
 
- -ylongticks => 1, #  0 or 1
+  -ylongticks => 1, #  0 or 1
 
 Default : B<0>
 
@@ -1458,7 +1484,7 @@ Default : B<#B3B3B3>
 
 Draw the axes as a box.
 
- -boxaxis => 1, #  0 or 1
+  -boxaxis => 1, #  0 or 1
 
 Default : B<0>
 
@@ -1470,7 +1496,7 @@ Default : B<0>
 
 Hide the axes with ticks and values ticks.
 
- -noaxis => 1, # 0 or 1
+  -noaxis => 1, # 0 or 1
 
 Default : B<0>
 
@@ -1485,7 +1511,7 @@ This might be useful in case your graph contains negative values,
 but you want it to be clear where the zero value is
 (see also zeroaxisonly and boxaxis).
 
- -zeroaxis => 1, # 0 or 1
+  -zeroaxis => 1, # 0 or 1
 
 Default : B<0>
 
@@ -1500,7 +1526,7 @@ at the bottom of the graph will be drawn.
 The labels for X values will be placed on the zero x-axis.
 This works if there is at least one negative value in dataset.
 
- -zeroaxisonly => 1, # 0 or 1
+  -zeroaxisonly => 1, # 0 or 1
 
 Default : B<0>
 
@@ -1512,7 +1538,7 @@ Default : B<0>
 
 Color of the axes.
 
- -axiscolor => 'red',
+  -axiscolor => 'red',
 
 Default : B<black>
 
@@ -1524,7 +1550,7 @@ Default : B<black>
 
 Set height of all x ticks.
 
- -xtickheight => 10,
+  -xtickheight => 10,
 
 Default : B<5>
 
@@ -1536,7 +1562,7 @@ Default : B<5>
 
 View x ticks of graph.
 
- -xtickview => 0, # 0 or 1
+  -xtickview => 0, # 0 or 1
 
 Default : B<1>
 
@@ -1548,7 +1574,7 @@ Default : B<1>
 
 Number of ticks to print for the y-axis.
 
- -yticknumber => 10,
+  -yticknumber => 10,
 
 Default : B<4>
 
@@ -1560,7 +1586,7 @@ Default : B<4>
 
 Set width of all y ticks.
  
- -ytickwidth => 10,
+  -ytickwidth => 10,
 
 Default : B<5>
 
@@ -1572,7 +1598,7 @@ Default : B<5>
 
 View y ticks of graph.
 
- -ytickview => 0, # 0 or 1
+  -ytickview => 0, # 0 or 1
 
 Default : B<1>
 
@@ -1584,7 +1610,7 @@ Default : B<1>
 
 View all ticks of graph. Combines xtickview and ytickview options.
 
- -alltickview => 0, # 0 or 1
+  -alltickview => 0, # 0 or 1
 
 Default : B<undef>
 
@@ -1596,7 +1622,7 @@ Default : B<undef>
 
 Set width of all lines graph of dataset.
 
- -linewidth => 10,
+  -linewidth => 10,
 
 Default : B<1>
 
@@ -1609,7 +1635,7 @@ Default : B<1>
 This controls the colors of the lines. This should be a reference 
 to an array of color names.
 
- -colordata => [ qw(green pink blue cyan) ],
+  -colordata => [ qw(green pink blue cyan) ],
 
 Default : 
 
@@ -1630,7 +1656,7 @@ will have the color of the first array case (red).
 
 Warning will be print if necessary.
  
- -verbose => 0,
+  -verbose => 0,
 
 Default : B<1>
 
@@ -1664,8 +1690,8 @@ Fill an array of arrays with the values of the datasets (I<\@data>).
 Make sure that every array has the same size, otherwise Tk::Chart::Lines 
 will complain and refuse to compile the graph.
 
- my @NewData = (1,10,12,5,4);
- $chart->add_data(\@NewData);
+  my @NewData = (1,10,12,5,4);
+  $chart->add_data(\@NewData);
 
 If your last graph has a legend, you have to add a legend entry for the new dataset. Otherwise, 
 the legend graph will not be display (see below).
@@ -1674,9 +1700,9 @@ the legend graph will not be display (see below).
 
 I<$legend>
 
- my @NewData = (1,10,12,5,4);
- my $legend = 'New data set';
- $chart->add_data(\@NewData, $legend);
+  my @NewData = (1,10,12,5,4);
+  my $legend = 'New data set';
+  $chart->add_data(\@NewData, $legend);
 
 =back
 
@@ -1748,19 +1774,19 @@ Fill an array of arrays with the x values and the values of the datasets (I<\@da
 Make sure that every array have the same size, otherwise Tk::Chart::Bars 
 will complain and refuse to compile the graph.
 
- my @data = (
-     [ '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th' ],
-     [ 1,     2,     5,     6,     3,     1.5,   1,     3,     4  ],
-     [ 4,     2,     5,     2,     3,     5.5,   7,     9,     4  ],
-     [ 1,     2,     52,    6,     3,     17.5,  1,     43,    10 ]
- );
+  my @data = (
+    [ '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th' ],
+    [ 1,     2,     5,     6,     3,     1.5,   1,     3,     4  ],
+    [ 4,     2,     5,     2,     3,     5.5,   7,     9,     4  ],
+    [ 1,     2,     52,    6,     3,     17.5,  1,     43,    10 ]
+  );
 
 @data have to contain a least two arrays, the x values and the values of the datasets.
 
 If you don't have a value for a point in a dataset, you can use undef, 
 and the point will be skipped.
 
- [ 1,     undef,     5,     6,     3,     1.5,   undef,     3,     4 ]
+  [ 1,     undef,     5,     6,     3,     1.5,   undef,     3,     4 ]
 
 
 =item *
@@ -1772,15 +1798,15 @@ If you have a no real number value in a dataset, it will be replaced by a consta
 Default : B<0>
 
 
- my @data = (
-      [     '1st',   '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th' ],
-      [         1,    '--',     5,     6,     3,   1.5,     1,     3,     4 ],
-      [ 'mistake',       2,     5,     2,     3,  'NA',     7,     9,     4 ],
-      [         1,       2,    52,     6,     3,  17.5,     1,    43,     4 ],
- );
- $chart->plot( \@data,
-   -substitutionvalue => '12',
- );
+  my @data = (
+    [     '1st',   '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th' ],
+    [         1,    '--',     5,     6,     3,   1.5,     1,     3,     4 ],
+    [ 'mistake',       2,     5,     2,     3,  'NA',     7,     9,     4 ],
+    [         1,       2,    52,     6,     3,  17.5,     1,    43,     4 ],
+  );
+  $chart->plot( \@data,
+    -substitutionvalue => '12',
+  );
   # mistake, -- and NA will be replace by 12
 
 -substitutionvalue have to be a real number (Eg : 12, .25, 02.25, 5.2e+11, ...) 
@@ -1840,7 +1866,7 @@ B<set_legend> method must be set if you want to enabled identification.
 
 Set a background color for the balloon.
 
- -background => 'red',
+  -background => 'red',
 
 Default : B<snow>
 
@@ -1852,7 +1878,7 @@ Specify an array reference wich contains 2 colors. The first color specifies
 the color of the line when mouse cursor passes over a entry in the legend. If the line 
 has the same color, the second color will be used.
 
- -colordatamouse => ['blue', 'green'],
+  -colordatamouse => ['blue', 'green'],
 
 Default : -colordatamouse => B<[ '#7F9010', '#CB89D3' ]>
 
@@ -1878,7 +1904,7 @@ View a legend for the graph and allow to enabled identification help by using B<
 
 Set a title legend.
 
- -title => 'My title',
+  -title => 'My title',
 
 Default : B<undef>
 
@@ -1888,7 +1914,7 @@ Default : B<undef>
 
 Set a color to legend text.
 
- -titlecolors => 'red',
+  -titlecolors => 'red',
 
 Default : B<black>
 
@@ -1898,7 +1924,7 @@ Default : B<black>
 
 Set the font to legend title text.
 
- -titlefont => '{Arial} 8 {normal}',
+  -titlefont => '{Arial} 8 {normal}',
 
 Default : B<{Times} 8 {bold}>
 
@@ -1908,7 +1934,7 @@ Default : B<{Times} 8 {bold}>
 
 Color of legend text.
 
- -legendcolor => 'white',
+  -legendcolor => 'white',
 
 Default : B<'black'>
 
@@ -1918,7 +1944,7 @@ Default : B<'black'>
 
 Set the font to legend text.
 
- -legendfont => '{Arial} 8 {normal}',
+  -legendfont => '{Arial} 8 {normal}',
 
 Default : B<{Times} 8 {normal}>
 
@@ -1928,7 +1954,7 @@ Default : B<{Times} 8 {normal}>
 
 Set a box around all legend.
 
- -box => 1, # or 0
+  -box => 1, # or 0
 
 Default : B<0>
 
@@ -1938,7 +1964,7 @@ Default : B<0>
 
 Change the heigth of marker for each legend entry. 
 
- -legendmarkerheight => 5,
+  -legendmarkerheight => 5,
 
 Default : B<10>
 
@@ -1948,7 +1974,7 @@ Default : B<10>
 
 Change the width of marker for each legend entry. 
 
- -legendmarkerwidth => 5,
+  -legendmarkerwidth => 5,
 
 Default : B<10>
 
@@ -1958,7 +1984,7 @@ Default : B<10>
 
 Change the height title legend space. 
 
- -heighttitle => 75,
+  -heighttitle => 75,
 
 Default : B<30>
 
@@ -1984,19 +2010,19 @@ a 300*300 size, after a zoom(200), the graph will have a 600*600 size.
 
 Zoom the graph the x-axis.
 
- # original canvas size 300*300
- $chart->zoomx(50); # new size : 150*300
- ...
- $chart->zoom(100); # new size : 300*300
+  # original canvas size 300*300
+  $chart->zoomx(50); # new size : 150*300
+  ...
+  $chart->zoom(100); # new size : 300*300
 
 =head2 zoomy
 
 Zoom the graph the y-axis.
 
- # original canvas size 300*300
- $chart->zoomy(50); # new size : 300*150
- ...
- $chart->zoom(100); # new size : 300*300
+  # original canvas size 300*300
+  $chart->zoomy(50); # new size : 300*150
+  ...
+  $chart->zoom(100); # new size : 300*300
 
 =head1 EXAMPLES
 
