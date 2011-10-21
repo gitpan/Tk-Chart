@@ -7,12 +7,12 @@ use Carp;
 #==================================================================
 # $Author    : Djibril Ousmanou                                   $
 # $Copyright : 2011                                               $
-# $Update    : 20/07/2011 13:17:21                                $
+# $Update    : 21/10/2011 12:39:35                                $
 # $AIM       : Create line graph                                  $
 #==================================================================
 
 use vars qw($VERSION);
-$VERSION = '1.04';
+$VERSION = '1.05';
 
 use base qw/ Tk::Derived Tk::Canvas::GradientColor /;
 use Tk::Balloon;
@@ -588,8 +588,10 @@ sub _axis {
 sub _xtick {
   my ($cw) = @_;
 
-  my $xvaluecolor = $cw->cget( -xvaluecolor );
-  my $longticks   = $cw->cget( -longticks );
+  my $xvaluecolor    = $cw->cget( -xvaluecolor );
+  my $longticks      = $cw->cget( -longticks );
+  my $xvaluevertical = $cw->cget( -xvaluevertical );
+  my $xvaluefont     = $cw->cget( -xvaluefont );
 
   # x coordinates y ticks on bottom x-axis
   my $x_tickx1 = $cw->{RefChart}->{Axis}{CxMin};
@@ -638,16 +640,22 @@ sub _xtick {
       # Display xticks short or long
       $cw->_display_xticks( $x_tickx1, $x_ticky1, $x_tickx2, $x_ticky2 );
 
-      $cw->createText(
+      my $id_xtick_value = $cw->createText(
         $xtick_xvalue,
         $xtick_yvalue,
-        -text => $data,
-        -fill => $xvaluecolor,
-        -tags => [
+        -text   => $data,
+        -fill   => $xvaluecolor,
+        -font   => $xvaluefont,    
+        -width  => $cw->{RefChart}->{Axis}{Xaxis}{SpaceBetweenTick},  
+        -anchor => 'n',
+        -tags   => [
           $cw->{RefChart}->{TAGS}{xValues}, $cw->{RefChart}->{TAGS}{AllValues},
           $cw->{RefChart}->{TAGS}{AllTagsChart},
         ],
       );
+      if ( defined $xvaluevertical and $xvaluevertical == 1 ) {
+        $cw->itemconfigure($id_xtick_value, -width => 5, -anchor => 'n',);
+      }
     }
   }
 
@@ -1121,11 +1129,11 @@ on the graph. This option can help you to clarify your graph.
 Eg: 
 
   # ['leg1', 'leg2', ...'leg1000', 'leg1001', ... 'leg2000'] => There are 2000 ticks and text values on x-axis.
-  -xlabelskip => 1 => ['leg1', 'leg3', 'leg5', ...]        # => 1000 ticks will be display.
+  -xlabelskip => 1 # => ['leg1', 'leg3', 'leg5', ...], 1000 ticks will be display.
+
+  -xlabelskip => 2, # => ['leg1', 'leg4', 'leg7', ...]
 
 See also -xvaluesregex option.
-
- -xlabelskip => 2,
 
 Default : B<0>
 
@@ -1140,6 +1148,30 @@ Set x values colors. See also textcolor option.
  -xvaluecolor => 'red',
 
 Default : B<black>
+
+=item Name:	B<XValueFont>
+
+=item Class: B<XValueFont>
+
+=item Switch:	B<-xvaluefont>
+
+Set the font of x values text.
+
+  -xvaluefont => '{Times} 12 {bold}',
+
+Default : B<{Times} 8 {normal}>
+
+=item Name:	B<XValuevertical>
+
+=item Class: B<XValueVertical>
+
+=item Switch:	B<-xvaluevertical>
+
+If set to a true value, the X axis labels will be printed vertically. 
+
+  -xvaluevertical => 1,
+
+Default : B<0>
 
 =item Name:	B<Xvaluespace>
 
@@ -1243,6 +1275,18 @@ Set the color of y values. See also valuecolor option.
  -yvaluecolor => 'red',
 
 Default : B<black>
+
+=item Name:	B<YValuefont>
+
+=item Class: B<YValueFont>
+
+=item Switch:	B<-yvaluefont>
+
+Set the font of y values text.
+
+  -yvaluefont => '{Times} 12 {bold}',
+
+Default : B<{Times} 8 {normal}>
 
 =item Name:	B<Yvalueview>
 

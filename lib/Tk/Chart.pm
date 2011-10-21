@@ -3,7 +3,7 @@ package Tk::Chart;
 #==================================================================
 # $Author    : Djibril Ousmanou                                   $
 # $Copyright : 2011                                               $
-# $Update    : 20/07/2011 22:12:04                                $
+# $Update    : 21/10/2011 12:44:05                                $
 # $AIM       : Private functions for Tk::Chart modules            $
 #==================================================================
 
@@ -13,7 +13,7 @@ use Carp;
 use Tk::Chart::Utils qw / :DUMMIES /;
 
 use vars qw($VERSION);
-$VERSION = '1.18';
+$VERSION = '1.19';
 
 use Exporter;
 
@@ -55,12 +55,13 @@ sub _get_configspecs {
     -xlabelskip   => [ 'PASSIVE', 'Xlabelskip',   'XLabelSkip',   0 ],
 
     -xvaluecolor    => [ 'PASSIVE', 'Xvaluecolor',    'XValueColor',    'black' ],
-    -xvaluevertical => [ 'PASSIVE', 'Xvaluevertical', 'XValueVertical', 0 ],
-    -xvaluespace =>
-      [ 'PASSIVE', 'Xvaluespace', 'XValueSpace', $ref_config->{Axis}{Xaxis}{ScaleValuesHeight} ],
-    -xvalueview   => [ 'PASSIVE', 'Xvalueview',   'XValueView',   1 ],
-    -yvalueview   => [ 'PASSIVE', 'Yvalueview',   'YValueView',   1 ],
+    -xvaluefont     => [ 'PASSIVE', 'Xvaluefont',     'XValueFont',     $ref_config->{Font}{DefaultXValues} ],
     -xvaluesregex => [ 'PASSIVE', 'Xvaluesregex', 'XValuesRegex', qr/.+/ ],
+    -xvaluespace    => [ 'PASSIVE', 'Xvaluespace', 'XValueSpace', $ref_config->{Axis}{Xaxis}{ScaleValuesHeight} ],
+    -xvaluevertical => [ 'PASSIVE', 'Xvaluevertical', 'XValueVertical', 0 ],
+    -xvalueview     => [ 'PASSIVE', 'Xvalueview',   'XValueView',   1 ],
+    -yvaluefont     => [ 'PASSIVE', 'Yvaluefont',     'YValueFont',     $ref_config->{Font}{DefaultYValues} ],
+    -yvalueview   => [ 'PASSIVE', 'Yvalueview',   'YValueView',   1 ],
 
     -ylabel         => [ 'PASSIVE', 'Ylabel',         'YLabel',         undef ],
     -ylabelcolor    => [ 'PASSIVE', 'Ylabelcolor',    'YLabelColor',    'black' ],
@@ -182,6 +183,8 @@ sub _initconfig {
       Default            => '{Times} 10 {normal}',
       DefaultTitle       => '{Times} 12 {bold}',
       DefaultLabel       => '{Times} 10 {bold}',
+      DefaultXValues     => '{Times} 8 {normal}',
+      DefaultYValues     => '{Times} 8 {normal}',
       DefaultLegend      => '{Times} 8 {normal}',
       DefaultLegendTitle => '{Times} 8 {bold}',
       DefaultBarValues   => '{Times} 8 {normal}',
@@ -800,8 +803,9 @@ sub _display_yticks {
 sub _ytick {
   my ($cw) = @_;
 
-  my $yminvalue = $cw->cget( -yminvalue );
-  my $longticks = $cw->cget( -longticks );
+  my $yminvalue  = $cw->cget( -yminvalue );
+  my $longticks  = $cw->cget( -longticks );
+  my $yvaluefont = $cw->cget( -yvaluefont );
   $cw->{RefChart}->{Axis}{Yaxis}{TickNumber} = $cw->cget( -yticknumber );
 
   # space between y ticks
@@ -834,6 +838,7 @@ sub _ytick {
       $y_valuey,
       -text => $value,
       -fill => $cw->cget( -yvaluecolor ),
+      -font => $yvaluefont,
       -tags => [
         $cw->{RefChart}->{TAGS}{yValues}, $cw->{RefChart}->{TAGS}{AllValues},
         $cw->{RefChart}->{TAGS}{AllTagsChart},
@@ -853,6 +858,7 @@ sub _ytick {
       $cw->{RefChart}->{Axis}{Cx0} - ( $cw->{RefChart}->{Axis}{Yaxis}{TickWidth} ),
       $cw->{RefChart}->{Axis}{Cy0},
       -text => 0,
+      -font => $yvaluefont,
       -tags => [
         $cw->{RefChart}->{TAGS}{xValue0}, $cw->{RefChart}->{TAGS}{AllValues},
         $cw->{RefChart}->{TAGS}{AllTagsChart},
@@ -868,6 +874,7 @@ sub _ytick {
     $cw->{RefChart}->{Axis}{CyMin},
     -text => _roundvalue( $cw->{RefChart}->{Data}{MinYValue} ),
     -fill => $cw->cget( -yvaluecolor ),
+    -font => $yvaluefont,
     -tags => [
       $cw->{RefChart}->{TAGS}{yValues}, $cw->{RefChart}->{TAGS}{AllValues},
       $cw->{RefChart}->{TAGS}{AllTagsChart},

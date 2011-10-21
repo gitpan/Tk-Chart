@@ -19,10 +19,12 @@ my $chart = $mw->Bars(
   -cumulatepercent => 1,
   -showvalues      => 0,
   -outlinebar      => 'blue',
+  -xvaluefont      => '{Times} 12 {normal}',
+  -xvaluecolor     => '#336699',
 )->pack(qw / -fill both -expand 1 /);
 
 my @data = (
-  [ '1st',     '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th' ],
+  [ '1st',     '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', 'dernier' ],
   [ 1,         '--',  0,     116,   3,     1.5,   1,     3,     4 ],
   [ 'mistake', 247,   57,    2,     3,     'NA',  7,     9,     4 ],
   [ 1,         452,   52,    69,    3,     17.5,  1,     43,    4 ],

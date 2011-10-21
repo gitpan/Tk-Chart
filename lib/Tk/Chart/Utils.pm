@@ -3,7 +3,7 @@ package Tk::Chart::Utils;
 #=====================================================================================
 # $Author    : Djibril Ousmanou                                                      $
 # $Copyright : 2011                                                                  $
-# $Update    : 20/07/2011 22:14:02                                                   $
+# $Update    : 21/10/2011 12:44:13                                                   $
 # $AIM       : Private functions and public shared methods between Tk::Chart modules $
 #=====================================================================================
 
@@ -12,7 +12,7 @@ use strict;
 use Carp;
 
 use vars qw($VERSION);
-$VERSION = '1.03';
+$VERSION = '1.04';
 
 use Exporter;
 use POSIX qw / floor /;
@@ -320,11 +320,12 @@ sub _set_data_cumulate_percent {
 
     # Sum calculate
     for my $index_data ( 1 .. $number_data ) {
-      $sum += $ref_data->[$index_data][$index_value];
+      if ( $ref_data->[$index_data][$index_value] ) { $sum += $ref_data->[$index_data][$index_value]; }
     }
 
     # Change value
     for my $index_data ( 1 .. $number_data ) {
+      next if ( ! $ref_data->[$index_data][$index_value] );
       my $new_value = ( $ref_data->[$index_data][$index_value] / $sum ) * 100;
       $new_data[$index_data][$index_value] = sprintf '%.5g', $new_value;
     }
@@ -362,7 +363,7 @@ sub add_data {
 
   # Cumulate pourcent => data change
   my $cumulatepercent = $cw->cget( -cumulatepercent );
-  if ( $cumulatepercent == 1 ) {
+  if ( defined $cumulatepercent and $cumulatepercent == 1 ) {
     $refdata = $cw->{RefChart}->{Data}{RefAllDataBeforePercent};
   }
 

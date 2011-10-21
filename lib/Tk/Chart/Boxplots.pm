@@ -7,12 +7,12 @@ use Carp;
 #==================================================================
 # $Author    : Djibril Ousmanou                                   $
 # $Copyright : 2011                                               $
-# $Update    : 01/01/2011 00:00:00                                $
+# $Update    : 21/10/2011 19:46:59                                $
 # $AIM       : Create boxplots                                    $
 #==================================================================
 
 use vars qw($VERSION);
-$VERSION = '1.03';
+$VERSION = '1.04';
 
 use base qw/ Tk::Derived Tk::Canvas::GradientColor /;
 use Tk::Balloon;
@@ -603,8 +603,10 @@ sub _axis {
 sub _xtick {
   my ($cw) = @_;
 
-  my $xvaluecolor = $cw->cget( -xvaluecolor );
-  my $longticks   = $cw->cget( -longticks );
+  my $xvaluecolor    = $cw->cget( -xvaluecolor );
+  my $longticks      = $cw->cget( -longticks );
+  my $xvaluevertical = $cw->cget( -xvaluevertical );
+  my $xvaluefont     = $cw->cget( -xvaluefont );
 
   # x coordinates y ticks on bottom x-axis
   my $x_tickx1 = $cw->{RefChart}->{Axis}{CxMin};
@@ -648,35 +650,44 @@ sub _xtick {
     my $regex_xtickselect = $cw->cget( -xvaluesregex );
 
     if ( $data =~ m{$regex_xtickselect} ) {
-      next if ( not defined $indice_skip{$indice} );
+      if ( not defined $indice_skip{$indice} ) {
+        $xtick_xvalue += $cw->{RefChart}->{Axis}{Xaxis}{SpaceBetweenTick};
+        next;
+      }
 
       # Display xticks short or long
       $cw->_display_xticks( $x_tickx1, $x_ticky1, $x_tickx2, $x_ticky2 );
 
-      if (  defined $cw->{RefChart}->{Axis}{Xaxis}{SpaceBetweenTick}
-        and defined $cw->{RefChart}->{Legend}{WidthOneCaracter} )
-      {
-        my $max_length    = $cw->{RefChart}->{Axis}{Xaxis}{SpaceBetweenTick};
-        my $width_data    = $cw->{RefChart}->{Legend}{WidthOneCaracter} * length $data;
-        my $nbr_character = int( $max_length / $cw->{RefChart}->{Legend}{WidthOneCaracter} );
-        if ( defined $max_length and $width_data > $max_length ) {
-          $data =~ s/^(.{$nbr_character}).*/$1/;
-          $data .= '...';
-        }
-      }
+#      if (  defined $cw->{RefChart}->{Axis}{Xaxis}{SpaceBetweenTick}
+#        and defined $cw->{RefChart}->{Legend}{WidthOneCaracter} )
+#      {
+#        my $max_length    = $cw->{RefChart}->{Axis}{Xaxis}{SpaceBetweenTick};
+#        my $width_data    = $cw->{RefChart}->{Legend}{WidthOneCaracter} * length $data;
+#        my $nbr_character = int( $max_length / $cw->{RefChart}->{Legend}{WidthOneCaracter} );
+#        if ( (defined $max_length) and ($width_data > $max_length) and ( not defined $xvaluevertical or $xvaluevertical != 1 ) ) {
+#          $data =~ s/^(.{$nbr_character}).*/$1/;
+#          $data .= '...';
+#        }
+#      }
 
-      $cw->createText(
+      my $id_xtick_value = $cw->createText(
         $xtick_xvalue,
         $xtick_yvalue,
-        -text => $data,
-        -fill => $xvaluecolor,
-        -tags => [
+        -text   => $data,
+        -fill   => $xvaluecolor,
+        -font   => $xvaluefont,      
+        -width  => $cw->{RefChart}->{Axis}{Xaxis}{SpaceBetweenTick}, 
+        -anchor => 'n',     
+        -tags   => [
           $cw->{RefChart}->{TAGS}{xValues}, $cw->{RefChart}->{TAGS}{AllValues},
           $cw->{RefChart}->{TAGS}{AllTagsChart},
         ],
 
         #        %option,
       );
+      if ( defined $xvaluevertical and $xvaluevertical == 1 ) {
+        $cw->itemconfigure($id_xtick_value, -width => 5, -anchor => 'n',);
+      }
 
     }
     $xtick_xvalue += $cw->{RefChart}->{Axis}{Xaxis}{SpaceBetweenTick};
@@ -1127,613 +1138,9 @@ Default : B<1>
 
 =back
 
-=head1 WIDGET-SPECIFIC OPTIONS like Tk::Chart::Lines
+=head1 WIDGET-SPECIFIC OPTIONS for graphs with axes.
 
-Many options that allow you to configure your graph as you want, but you can skip  
-the default configuration.
-
-=over 4
-
-=item Name:	B<Title>
-
-=item Class: B<Title>
-
-=item Switch:	B<-title>
-
-Title of your graph.
-
- -title => 'My graph title',
-
-Default : B<undef>
-
-=item Name:	B<Titleposition>
-
-=item Class:	B<TitlePosition>
-
-=item Switch:	B<-titleposition>
-
-Position of title : B<center>, B<left> or B<right>
-  
- -titleposition => 'left',
-
-Default : B<center>
-
-=item Name:	B<Titlecolor>
-
-=item Class: B<TitleColor>
-
-=item Switch:	B<-titlecolor>
-
-Title color of your graph.
-
- -titlecolor => 'red',
-
-Default : B<black>
-
-=item Name:	B<Titlefont>
-
-=item Class: B<TitleFont>
-
-=item Switch:	B<-titlefont>
-
-Set the font for the title text. See also textfont option. 
-
- -titlefont => 'Times 15 {normal}',
-
-Default : B<{Times} 12 {bold}>
-
-=item Name:	B<Titleheight>
-
-=item Class: B<TitleHeight>
-
-=item Switch:	B<-titleheight>
-
-Height for title graph space.
-
- -titleheight => 100,
-
-Default : B<40>
-
-=item Name:	B<Xlabel>
-
-=item Class: B<XLabel>
-
-=item Switch:	B<-xlabel>
-
-The label to be printed just below the x-axis.
-
- -xlabel => 'X label',
-
-Default : B<undef>
-
-=item Name:	B<Xlabelcolor>
-
-=item Class:	B<XLabelColor>
-
-=item Switch:	B<-xlabelcolor>
-
-Set x label color. See also textcolor option.
-
- -xlabelcolor => 'red',
-
-Default : B<black>
-
-=item Name:	B<Xlabelfont>
-
-=item Class: B<XLabelFont>
-
-=item Switch:	B<-xlabelfont>
-
-Set the font for the x label text. See also textfont option.
-
- -xlabelfont => 'Times 15 {normal}',
-
-Default : B<{Times} 10 {bold}>
-
-=item Name:	B<Xlabelheight>
-
-=item Class: B<XLabelHeight>
-
-=item Switch:	B<-xlabelheight>
-
-Height for x label space.
-
- -xlabelheight => 50,
-
-Default : B<30>
-
-=item Name:	B<Xlabelskip>
-
-=item Class: B<XLabelSkip>
-
-=item Switch:	B<-xlabelskip>
-
-Print every xlabelskip number under the tick on the x-axis. If you have a 
-dataset wich contain many points, the tick and x values will be overwrite 
-on the graph. This option can help you to clarify your graph.
-Eg: 
-
-  # ['leg1', 'leg2', ...'leg1000', 'leg1001', ... 'leg2000'] => There are 2000 ticks and text values on x-axis.
-  -xlabelskip => 1 => ['leg1', 'leg3', 'leg5', ...]        # => 1000 ticks will be display.
-
-See also -xvaluesregex option.
-
- -xlabelskip => 2,
-
-Default : B<0>
-
-=item Name:	B<Xvaluecolor>
-
-=item Class: B<XValueColor>
-
-=item Switch:	B<-xvaluecolor>
-
-Set x values colors. See also textcolor option.
-
- -xvaluecolor => 'red',
-
-Default : B<black>
-
-=item Name:	B<Xvaluespace>
-
-=item Class:	B<XValueSpace>
-
-=item Switch:	B<-xvaluespace>
-
-Width for x values space.
-
- -xvaluespace => 50,
-
-Default : B<30>
-
-=item Name:	B<Xvalueview>
-
-=item Class:	B<XvalueView>
-
-=item Switch:	B<-xvalueview>
-
-View values on x-axis.
- 
- -xvalueview => 0, # 0 or 1
-
-Default : B<1>
-
-=item Name:	B<Xvaluesregex>
-
-=item Class:	B<XValuesRegex>
-
-=item Switch:	B<-xvaluesregex>
-
-View the x values which will match with regex. It allows you to display tick on x-axis and values 
-that you want. You can combine it with -xlabelskip to display many dataset.
-
- ...
- ['leg1', 'leg2', 'data1', 'data2', 'symb1', 'symb2']
- ...
-
- -xvaluesregex => qr/leg/i,
-
-On the graph, just leg1 and leg2 will be display.
-
-Default : B<qr/.+/>
-
-=item Name:	B<Ylabel>
-
-=item Class:	B<YLabel>
-
-=item Switch:	B<-ylabel>
-
-The label to be printed next to y-axis.
-
- -ylabel => 'Y label',
-
-Default : B<undef>
-
-=item Name:	B<Ylabelcolor>
-
-=item Class:	B<YLabelColor>
-
-=item Switch:	B<-ylabelcolor>
-
-Set the color of y label. See also textcolor option. 
-
- -ylabelcolor => 'red',
-
-Default : B<black>
-
-=item Name:	B<Ylabelfont>
-
-=item Class:	B<YLabelFont>
-
-=item Switch:	B<-ylabelfont>
-
-Set the font for the y label text. See also textfont option. 
-
- -ylabelfont => 'Times 15 {normal}',
-
-Default : B<{Times} 10 {bold}>
-
-=item Name:	B<Ylabelwidth>
-
-=item Class:	B<YLabelWidth>
-
-=item Switch:	B<-ylabelwidth>
-
-Width of space for y label.
-
- -ylabelwidth => 30,
-
-Default : B<5>
-
-=item Name:	B<Yvaluecolor>
-
-=item Class:	B<YValueColor>
-
-=item Switch:	B<-yvaluecolor>
-
-Set the color of y values. See also valuecolor option.
-
- -yvaluecolor => 'red',
-
-Default : B<black>
-
-=item Name:	B<Yvalueview>
-
-=item Class:	B<YvalueView>
-
-=item Switch:	B<-yvalueview>
-
-View values on y-axis.
- 
- -yvalueview => 0, # 0 or 1
-
-Default : B<1>
-
-=item Name:	B<Yminvalue>
-
-=item Class:	B<YMinValue>
-
-=item Switch:	B<-yminvalue>
-
-Minimum value displayed on the y-axis. See also -interval option.
- 
- -yminvalue => 10.12,
-
-Default : B<0>
-
-=item Name:	B<Ymaxvalue>
-
-=item Class:	B<YMaxValue>
-
-=item Switch:	B<-ymaxvalue>
-
-Maximum value displayed on the y-axis. See also -interval option.
- 
- -ymaxvalue => 5,
-
-Default : B<Computed from data sets>
-
-=item Name:	B<interval>
-
-=item Class:	B<Interval>
-
-=item Switch:	B<-interval>
-
-If set to a true value, -yminvalue and -ymaxvalue will be fixed to minimum and maximum values of data sets. 
-It overwrites -yminvalue and -ymaxvalue options.
- 
- -interval => 1, # 0 or 1
-
-Default : B<0>
-
-=item Name:	B<Labelscolor>
-
-=item Class: B<LabelsColor>
-
-=item Switch:	B<-labelscolor>
-
-Combine xlabelcolor and ylabelcolor options. See also textcolor option.
-
- -labelscolor => 'red',
-
-Default : B<undef>
-
-=item Name:	B<Valuescolor>
-
-=item Class: B<ValuesColor>
-
-=item Switch:	B<-valuescolor>
-
-Set the color of x, y values in axes. It combines xvaluecolor 
-and yvaluecolor options.
-
- -valuescolor => 'red',
-
-Default : B<undef>
-
-=item Name:	B<Textcolor>
-
-=item Class: B<TextColor>
-
-=item Switch:	B<-textcolor>
-
-Set the color of x, y labels and title text. 
-It combines titlecolor, xlabelcolor and ylabelcolor options.
-
- -textcolor => 'red',
-
-Default : B<undef>
-
-=item Name:	B<Textfont>
-
-=item Class: B<TextFont>
-
-=item Switch:	B<-textfont>
-
-Set the font of x, y labels and title text. It combines titlefont, 
-xlabelfont and ylabelfont options.
-
- -textfont => 'Times 15 {normal}',
-
-Default : B<undef>
-
-=item Name:	B<Longticks>
-
-=item Class: B<LongTicks>
-
-=item Switch:	B<-longticks>
-
-If longticks is a true value, x and y ticks will be drawn with the same length as the axes. See also -xlongticks and -ylongticks options. 
-
- -longticks => 1, #  0 or 1
-
-Default : B<0>
-
-=item Name:	B<Longtickscolor>
-
-=item Class: B<LongTicksColor>
-
-=item Switch:	B<-longtickscolor>
-
-Set the color of x and y ticks that will be drawn with the same length as the axes. See also -xlongtickscolor and -ylongtickscolor options.
-
-  -longtickscolor => 'red',
-
-Default : B<undef>
-
-=item Name:	B<XLongticks>
-
-=item Class: B<XLongTicks>
-
-=item Switch:	B<-xlongticks>
-
-If xlongticks is a true value, x ticks will be drawn with the same length as the x-axis. See also -longticks.
-
- -xlongticks => 1, #  0 or 1
-
-Default : B<0>
-
-=item Name:	B<YLongticks>
-
-=item Class: B<YLongTicks>
-
-=item Switch:	B<-ylongticks>
-
-If ylongticks is a true value, y ticks will be drawn with the same length as the axes. See also -longticks.
-
- -ylongticks => 1, #  0 or 1
-
-Default : B<0>
-
-=item Name:	B<XLongtickscolor>
-
-=item Class: B<XLongTicksColor>
-
-=item Switch:	B<-xlongtickscolor>
-
-Set the color of xlongticks. See also -xlongtickscolor.
-
-  -xlongtickscolor => 'red',
-
-Default : B<#B3B3B3>
-
-=item Name:	B<YLongtickscolor>
-
-=item Class: B<YLongTicksColor>
-
-=item Switch:	B<-ylongtickscolor>
-
-Set the color of ylongticks. See also -ylongtickscolor.
-
-  -ylongtickscolor => 'red',
-
-Default : B<#B3B3B3>
-
-=item Name:	B<Boxaxis>
-
-=item Class: B<BoxAxis>
-
-=item Switch:	B<-boxaxis>
-
-Draw the axes as a box.
-
- -boxaxis => 1, #  0 or 1
-
-Default : B<0>
-
-=item Name:	B<Noaxis>
-
-=item Class: B<NoAxis>
-
-=item Switch:	B<-noaxis>
-
-Hide the axes with ticks and values ticks.
-
- -noaxis => 1, # 0 or 1
-
-Default : B<0>
-
-=item Name:	B<Zeroaxis>
-
-=item Class: B<ZeroAxis>
-
-=item Switch:	B<-zeroaxis>
-
-If set to a true value, the axes for y values will only be drawn. 
-This might be useful in case your graph contains negative values, 
-but you want it to be clear where the zero value is
-(see also zeroaxisonly and boxaxis).
-
- -zeroaxis => 1, # 0 or 1
-
-Default : B<0>
-
-=item Name:	B<Zeroaxisonly>
-
-=item Class:	B<ZeroAxisOnly>
-
-=item Switch:	B<-zeroaxisonly>
-
-If set to a true value, the zero x-axis will be drawn and no axes 
-at the bottom of the graph will be drawn. 
-The labels for X values will be placed on the zero x-axis.
-This works if there is at least one negative value in dataset.
-
- -zeroaxisonly => 1, # 0 or 1
-
-Default : B<0>
-
-=item Name:	B<Axiscolor>
-
-=item Class: B<AxisColor>
-
-=item Switch:	B<-axiscolor>
-
-Color of the axes.
-
- -axiscolor => 'red',
-
-Default : B<black>
-
-=item Name:	B<Xtickheight>
-
-=item Class:	B<XTickHeight>
-
-=item Switch:	B<-xtickheight>
-
-Set height of all x ticks.
-
- -xtickheight => 10,
-
-Default : B<5>
-
-=item Name:	B<Xtickview>
-
-=item Class:	B<XTickView>
-
-=item Switch:	B<-xtickview>
-
-View x ticks of graph.
-
- -xtickview => 0, # 0 or 1
-
-Default : B<1>
-
-=item Name:	B<Yticknumber>
-
-=item Class: B<YTickNumber>
-
-=item Switch:	B<-yticknumber>
-
-Number of ticks to print for the y-axis.
-
- -yticknumber => 10,
-
-Default : B<4>
-
-=item Name:	B<Ytickwidth>
-
-=item Class: B<YtickWidth>
-
-=item Switch:	B<-ytickwidth>
-
-Set width of all y ticks.
- 
- -ytickwidth => 10,
-
-Default : B<5>
-
-=item Name:	B<Ytickview>
-
-=item Class: B<YTickView>
-
-=item Switch:	B<-ytickview>
-
-View y ticks of graph.
-
- -ytickview => 0, # 0 or 1
-
-Default : B<1>
-
-=item Name:	B<Alltickview>
-
-=item Class: B<AllTickView>
-
-=item Switch:	B<-alltickview>
-
-View all ticks of graph. Combines xtickview and ytickview options.
-
- -alltickview => 0, # 0 or 1
-
-Default : B<undef>
-
-=item Name:	B<Linewidth>
-
-=item Class: B<LineWidth>
-
-=item Switch:	B<-linewidth>
-
-Set width of all lines graph of dataset.
-
- -linewidth => 10,
-
-Default : B<1>
-
-=item Name:	B<Colordata>
-
-=item Class: B<ColorData>
-
-=item Switch:	B<-colordata>
-
-This controls the colors of the lines. This should be a reference 
-to an array of color names.
-
- -colordata => [ qw(green pink blue cyan) ],
-
-Default : 
-
-  [ 'red',     'green',   'blue',    'yellow',  'purple',  'cyan',
-    '#996600', '#99A6CC', '#669933', '#929292', '#006600', '#FFE100',
-    '#00A6FF', '#009060', '#B000E0', '#A08000', 'orange',  'brown',
-    'black',   '#FFCCFF', '#99CCFF', '#FF00CC', '#FF8000', '#006090',
-  ],
-
-The default array contains 24 colors. If you have more than 24 samples, the next line 
-will have the color of the first array case (red).
-
-=item Name:	B<verbose>
-
-=item Class:	B<Verbose>
-
-=item Switch:	B<-verbose>
-
-Warning will be print if necessary.
- 
- -verbose => 0,
-
-Default : B<1>
-
-=back
+The documention is the same of L<Tk::Chart::Lines/"WIDGET-SPECIFIC OPTIONS">
 
 =head1 WIDGET METHODS
 

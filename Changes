@@ -1,5 +1,17 @@
 Revision history for Tk-Chart
 
+1.19 21/10/2011 19:32:37
+      Tk::Chart::Bars 
+        undef values produce non fatal error. Bug have been resolved (Thank you A. Wadley)
+        -xlabelskip : tick and text will be now displayed correctly.
+      Tk::Chart::Mixed, Tk::Chart::Area, Tk::Chart::Boxplots...  
+        -xlabelskip : tick and text will be now displayed correctly.
+
+      -xvaluefont, -yvaluefont and -xvaluevertical options added.
+      In Tk::Chart::Bars, Tk::Chart::Mixed and Tk::Chart::Boxplots x values data are cut with ... if width text 
+      greater than width space between 2 ticks. Now, The text will not be cut but the rest of the text will be display below.
+      POD documentations updated.
+        
 1.18 20/07/2011 20/07/2011 22:30:31
       Tk::Chart::Bars POD documentation have been updated and an option added.
         -cumulatepercent option added (https://rt.cpan.org/Ticket/Display.html?id=69605)
