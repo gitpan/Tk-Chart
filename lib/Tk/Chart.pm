@@ -3,7 +3,7 @@ package Tk::Chart;
 #==================================================================
 # $Author    : Djibril Ousmanou                                   $
 # $Copyright : 2011                                               $
-# $Update    : 21/10/2011 12:44:05                                $
+# $Update    : 21/10/2011 22:26:55                                $
 # $AIM       : Private functions for Tk::Chart modules            $
 #==================================================================
 
@@ -13,7 +13,7 @@ use Carp;
 use Tk::Chart::Utils qw / :DUMMIES /;
 
 use vars qw($VERSION);
-$VERSION = '1.19';
+$VERSION = '1.20';
 
 use Exporter;
 

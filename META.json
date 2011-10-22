@@ -35,19 +35,19 @@
    "provides" : {
       "Tk::Chart" : {
          "file" : "lib/Tk/Chart.pm",
-         "version" : "1.19"
+         "version" : "1.20"
       },
       "Tk::Chart::Areas" : {
          "file" : "lib/Tk/Chart/Areas.pm",
-         "version" : "1.04"
+         "version" : "1.05"
       },
       "Tk::Chart::Bars" : {
          "file" : "lib/Tk/Chart/Bars.pm",
-         "version" : "1.05"
+         "version" : "1.06"
       },
       "Tk::Chart::Boxplots" : {
          "file" : "lib/Tk/Chart/Boxplots.pm",
-         "version" : "1.04"
+         "version" : "1.05"
       },
       "Tk::Chart::Lines" : {
          "file" : "lib/Tk/Chart/Lines.pm",
@@ -55,7 +55,7 @@
       },
       "Tk::Chart::Mixed" : {
          "file" : "lib/Tk/Chart/Mixed.pm",
-         "version" : "1.04"
+         "version" : "1.05"
       },
       "Tk::Chart::Pie" : {
          "file" : "lib/Tk/Chart/Pie.pm",
@@ -72,5 +72,5 @@
          "http://dev.perl.org/licenses/"
       ]
    },
-   "version" : "1.19"
+   "version" : "1.20"
 }

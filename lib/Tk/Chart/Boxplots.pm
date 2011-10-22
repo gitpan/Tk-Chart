@@ -7,12 +7,12 @@ use Carp;
 #==================================================================
 # $Author    : Djibril Ousmanou                                   $
 # $Copyright : 2011                                               $
-# $Update    : 21/10/2011 19:46:59                                $
+# $Update    : 21/10/2011 22:26:28                                $
 # $AIM       : Create boxplots                                    $
 #==================================================================
 
 use vars qw($VERSION);
-$VERSION = '1.04';
+$VERSION = '1.05';
 
 use base qw/ Tk::Derived Tk::Canvas::GradientColor /;
 use Tk::Balloon;
@@ -1140,7 +1140,7 @@ Default : B<1>
 
 =head1 WIDGET-SPECIFIC OPTIONS for graphs with axes.
 
-The documention is the same of L<Tk::Chart::Lines/"WIDGET-SPECIFIC OPTIONS">
+See L<Tk::Chart::Lines/"WIDGET-SPECIFIC OPTIONS">
 
 =head1 WIDGET METHODS
 

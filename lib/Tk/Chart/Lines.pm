@@ -1129,7 +1129,7 @@ on the graph. This option can help you to clarify your graph.
 Eg: 
 
   # ['leg1', 'leg2', ...'leg1000', 'leg1001', ... 'leg2000'] => There are 2000 ticks and text values on x-axis.
-  -xlabelskip => 1 # => ['leg1', 'leg3', 'leg5', ...], 1000 ticks will be display.
+  -xlabelskip => 1, # => ['leg1', 'leg3', 'leg5', ...], 1000 ticks will be display.
 
   -xlabelskip => 2, # => ['leg1', 'leg4', 'leg7', ...]
 

@@ -7,12 +7,12 @@ use Carp;
 #==================================================================
 # $Author    : Djibril Ousmanou                                   $
 # $Copyright : 2011                                               $
-# $Update    : 21/10/2011 02:59:24                                $
+# $Update    : 21/10/2011 22:25:00                                $
 # $AIM       : Create Mixed graph                                 $
 #==================================================================
 
 use vars qw($VERSION);
-$VERSION = '1.04';
+$VERSION = '1.05';
 
 use base qw/ Tk::Derived Tk::Canvas::GradientColor /;
 use Tk::Balloon;
@@ -1507,7 +1507,7 @@ Note that the last two are not part of the default list.
 
 =head1 WIDGET-SPECIFIC OPTIONS for graphs with axes.
 
-The documention is the same of L<Tk::Chart::Lines/"WIDGET-SPECIFIC OPTIONS">
+See L<Tk::Chart::Lines/"WIDGET-SPECIFIC OPTIONS">
 
 =head1 WIDGET-SPECIFIC OPTIONS like Tk::Chart::Spline
 

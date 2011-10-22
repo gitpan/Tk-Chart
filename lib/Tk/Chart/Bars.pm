@@ -7,12 +7,12 @@ use Carp;
 #==================================================================
 # $Author    : Djibril Ousmanou                                   $
 # $Copyright : 2011                                               $
-# $Update    : 21/10/2011 12:34:35                                $
+# $Update    : 21/10/2011 22:26:14                                $
 # $AIM       : Create bars graph                                  $
 #==================================================================
 
 use vars qw($VERSION);
-$VERSION = '1.05';
+$VERSION = '1.06';
 
 use base qw/ Tk::Derived Tk::Canvas::GradientColor /;
 use Tk::Balloon;
@@ -1068,7 +1068,7 @@ Default : B<'black'>
 
 =head1 WIDGET-SPECIFIC OPTIONS for graphs with axes.
 
-The documention is the same of L<Tk::Chart::Lines/"WIDGET-SPECIFIC OPTIONS">
+See L<Tk::Chart::Lines/"WIDGET-SPECIFIC OPTIONS">
 
 =head1 WIDGET METHODS
 
